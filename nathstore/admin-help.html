@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NathStore — Guide Import JSON</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --accent: #ff4d1c; --blue: #7aabff; --vert: #4caf7d; --rouge: #e05555; --yellow: #ffd166; }
+    [data-theme="dark"] { --bg: #0a0a0a; --bg-2: #141414; --bg-3: #1e1e1e; --border: #2a2a2a; --text: #f0ece4; --text-dim: #5a5650; --text-mid: #8a8070; }
+    body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; }
+
+    nav { position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); padding: 0 40px; height: 64px; display: flex; align-items: center; justify-content: space-between; background: rgba(10,10,10,0.95); backdrop-filter: blur(20px); }
+    .nav-logo { font-family: 'Instrument Serif', serif; font-size: 20px; font-style: italic; }
+    .nav-logo span { color: var(--accent); }
+    .nav-badge { background: var(--blue); color: #000; font-size: 9px; font-weight: 700; letter-spacing: 2px; padding: 3px 10px; border-radius: 100px; margin-left: 10px; }
+    .btn-back { background: none; border: 1px solid var(--border); color: var(--text-mid); font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 600; padding: 7px 16px; cursor: pointer; transition: all 0.2s; border-radius: 2px; text-decoration: none; display: inline-flex; align-items: center; }
+    .btn-back:hover { border-color: var(--text); color: var(--text); }
+
+    main { max-width: 900px; margin: 0 auto; padding: 60px 40px; }
+
+    .page-tag { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: var(--blue); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+    .page-tag::before { content: ''; width: 24px; height: 1px; background: var(--blue); }
+    .page-title { font-family: 'Instrument Serif', serif; font-size: clamp(2rem, 5vw, 3.5rem); font-style: italic; line-height: 1.05; margin-bottom: 16px; }
+    .page-sub { font-size: 15px; color: var(--text-mid); line-height: 1.7; margin-bottom: 60px; max-width: 560px; }
+
+    .toc { background: var(--bg-2); border: 1px solid var(--border); border-left: 3px solid var(--blue); padding: 24px 28px; margin-bottom: 60px; border-radius: 2px; }
+    .toc-title { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 16px; }
+    .toc a { display: block; color: var(--blue); text-decoration: none; font-size: 13px; padding: 4px 0; font-family: 'DM Mono', monospace; transition: color 0.2s; }
+    .toc a:hover { color: var(--text); }
+    .toc a::before { content: '→ '; }
+
+    .section { margin-bottom: 60px; }
+    .section-num { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 3px; margin-bottom: 8px; }
+    .section-title { font-family: 'Instrument Serif', serif; font-size: 28px; font-style: italic; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+    .section p { font-size: 14px; color: var(--text-mid); line-height: 1.8; margin-bottom: 16px; }
+    .section p strong { color: var(--text); }
+
+    /* CODE BLOCKS */
+    .code-block { background: #0d0d0d; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; margin: 20px 0; position: relative; }
+    .code-header { background: var(--bg-3); padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+    .code-lang { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; }
+    .code-copy { background: none; border: 1px solid var(--border); color: var(--text-dim); font-size: 10px; padding: 3px 10px; cursor: pointer; font-family: 'DM Mono', monospace; border-radius: 2px; transition: all 0.2s; letter-spacing: 1px; }
+    .code-copy:hover { border-color: var(--blue); color: var(--blue); }
+    .code-body { padding: 20px; font-family: 'DM Mono', monospace; font-size: 12px; line-height: 1.8; overflow-x: auto; white-space: pre; }
+    .c-key { color: #7aabff; }
+    .c-str { color: #ce9178; }
+    .c-num { color: #b5cea8; }
+    .c-null { color: #569cd6; }
+    .c-comment { color: #6a9955; font-style: italic; }
+    .c-bracket { color: var(--text-dim); }
+
+    /* CHAMPS TABLE */
+    .fields-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    .fields-table th { background: var(--bg-3); padding: 10px 16px; text-align: left; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); font-weight: 400; }
+    .fields-table td { padding: 12px 16px; border-top: 1px solid var(--border); font-size: 13px; vertical-align: top; }
+    .fields-table tr:hover td { background: var(--bg-2); }
+    .field-name { font-family: 'DM Mono', monospace; color: var(--blue); }
+    .field-type { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-dim); }
+    .badge-req { background: rgba(255,77,28,0.15); color: var(--accent); font-size: 9px; font-weight: 700; letter-spacing: 2px; padding: 2px 8px; border-radius: 100px; }
+    .badge-opt { background: rgba(76,175,125,0.12); color: var(--vert); font-size: 9px; font-weight: 700; letter-spacing: 2px; padding: 2px 8px; border-radius: 100px; }
+
+    /* CALLOUTS */
+    .callout { padding: 16px 20px; border-radius: 2px; margin: 20px 0; font-size: 13px; line-height: 1.7; }
+    .callout.warn { background: rgba(255,209,102,0.08); border-left: 3px solid var(--yellow); color: var(--text-mid); }
+    .callout.warn strong { color: var(--yellow); }
+    .callout.info { background: rgba(122,171,255,0.08); border-left: 3px solid var(--blue); color: var(--text-mid); }
+    .callout.info strong { color: var(--blue); }
+    .callout.ok { background: rgba(76,175,125,0.08); border-left: 3px solid var(--vert); color: var(--text-mid); }
+    .callout.ok strong { color: var(--vert); }
+    .callout.err { background: rgba(224,85,85,0.08); border-left: 3px solid var(--rouge); color: var(--text-mid); }
+    .callout.err strong { color: var(--rouge); }
+
+    /* CATS */
+    .cats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 20px 0; }
+    .cat-card { background: var(--bg-2); border: 1px solid var(--border); padding: 16px 20px; border-radius: 4px; display: flex; align-items: center; gap: 12px; }
+    .cat-emoji { font-size: 24px; }
+    .cat-info-name { font-weight: 700; font-size: 14px; margin-bottom: 2px; }
+    .cat-info-val { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--blue); }
+
+    /* ERREURS */
+    .errors-list { display: flex; flex-direction: column; gap: 8px; margin: 20px 0; }
+    .error-item { background: var(--bg-2); border: 1px solid var(--border); border-left: 3px solid var(--rouge); padding: 12px 16px; }
+    .error-label { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--rouge); margin-bottom: 4px; }
+    .error-desc { font-size: 12px; color: var(--text-mid); }
+
+    footer { border-top: 1px solid var(--border); padding: 24px 40px; text-align: center; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-dim); margin-top: 60px; }
+
+    @media (max-width: 768px) { nav { padding: 0 20px; } main { padding: 40px 20px; } .cats-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div>
+      <span class="nav-logo">Nath<span>Store</span></span>
+      <span class="nav-badge">GUIDE JSON</span>
+    </div>
+    <a href="admin.html" class="btn-back">← Retour au panel</a>
+  </nav>
+
+  <main>
+    <div class="page-tag">Documentation</div>
+    <h1 class="page-title">Guide d'import<br>de produits JSON</h1>
+    <p class="page-sub">Tout ce qu'il faut savoir pour importer des produits en masse dans NathStore via un fichier ou du JSON collé directement dans le panel admin.</p>
+
+    <div class="toc">
+      <div class="toc-title">Sommaire</div>
+      <a href="#format">1. Format JSON attendu</a>
+      <a href="#champs">2. Description des champs</a>
+      <a href="#categories">3. Catégories disponibles</a>
+      <a href="#exemples">4. Exemples complets</a>
+      <a href="#erreurs">5. Erreurs fréquentes</a>
+      <a href="#conseils">6. Conseils & astuces</a>
+    </div>
+
+    <!-- 1. FORMAT -->
+    <div class="section" id="format">
+      <div class="section-num">01</div>
+      <div class="section-title">Format JSON attendu</div>
+      <p>L'import attend un <strong>tableau JSON</strong> (array) contenant un ou plusieurs objets produits. Chaque objet représente un produit.</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">JSON — structure de base</span>
+          <button class="code-copy" onclick="copier(this, '[\\n  { ... },\\n  { ... }\\n]')">Copier</button>
+        </div>
+        <div class="code-body"><span class="c-bracket">[</span>
+  <span class="c-bracket">{</span>
+    <span class="c-key">"nom"</span>: <span class="c-str">"Nom du produit"</span>,
+    <span class="c-key">"emoji"</span>: <span class="c-str">"🎮"</span>,
+    <span class="c-key">"categorie"</span>: <span class="c-str">"gaming"</span>,
+    <span class="c-key">"prix"</span>: <span class="c-num">29.99</span>,
+    <span class="c-key">"description"</span>: <span class="c-str">"Description courte"</span>,
+    <span class="c-key">"badge"</span>: <span class="c-str">"NEW"</span>
+  <span class="c-bracket">}</span>,
+  <span class="c-bracket">{</span>
+    <span class="c-comment">// Deuxième produit...</span>
+  <span class="c-bracket">}</span>
+<span class="c-bracket">]</span></div>
+      </div>
+
+      <div class="callout info"><strong>Info :</strong> Tu peux importer un seul produit sans tableau — l'import accepte aussi un objet seul <code style="font-family:'DM Mono',monospace;font-size:0.9em">{ ... }</code> et le convertit automatiquement.</div>
+    </div>
+
+    <!-- 2. CHAMPS -->
+    <div class="section" id="champs">
+      <div class="section-num">02</div>
+      <div class="section-title">Description des champs</div>
+      <p>Voici tous les champs reconnus par l'API. Les champs <strong>requis</strong> doivent absolument être présents, les champs <strong>optionnels</strong> peuvent être omis.</p>
+
+      <table class="fields-table">
+        <thead>
+          <tr><th>Champ</th><th>Type</th><th>Requis ?</th><th>Description</th><th>Exemple</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="field-name">nom</td>
+            <td class="field-type">string</td>
+            <td><span class="badge-req">REQUIS</span></td>
+            <td style="color:var(--text-mid);font-size:12px">Nom du produit affiché dans la boutique</td>
+            <td class="field-type" style="color:#ce9178">"Air Max 2026"</td>
+          </tr>
+          <tr>
+            <td class="field-name">emoji</td>
+            <td class="field-type">string</td>
+            <td><span class="badge-req">REQUIS</span></td>
+            <td style="color:var(--text-mid);font-size:12px">Un seul emoji, affiché comme image produit</td>
+            <td class="field-type" style="color:#ce9178">"👟"</td>
+          </tr>
+          <tr>
+            <td class="field-name">categorie</td>
+            <td class="field-type">string</td>
+            <td><span class="badge-req">REQUIS</span></td>
+            <td style="color:var(--text-mid);font-size:12px">Doit être exactement l'une des 4 valeurs valides</td>
+            <td class="field-type" style="color:#ce9178">"mode"</td>
+          </tr>
+          <tr>
+            <td class="field-name">prix</td>
+            <td class="field-type">number</td>
+            <td><span class="badge-req">REQUIS</span></td>
+            <td style="color:var(--text-mid);font-size:12px">Prix en euros, décimal avec point (pas virgule)</td>
+            <td class="field-type" style="color:#b5cea8">89.99</td>
+          </tr>
+          <tr>
+            <td class="field-name">description</td>
+            <td class="field-type">string</td>
+            <td><span class="badge-opt">OPTIONNEL</span></td>
+            <td style="color:var(--text-mid);font-size:12px">Courte description affichée sous le nom. Peut être vide.</td>
+            <td class="field-type" style="color:#ce9178">"Sneakers confortables"</td>
+          </tr>
+          <tr>
+            <td class="field-name">badge</td>
+            <td class="field-type">string | null</td>
+            <td><span class="badge-opt">OPTIONNEL</span></td>
+            <td style="color:var(--text-mid);font-size:12px">Petit label rouge affiché sur la vignette. Mettre null pour aucun badge.</td>
+            <td class="field-type" style="color:#ce9178">"NEW" / "PROMO" / null</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout warn"><strong>Attention :</strong> Si <code style="font-family:'DM Mono',monospace;font-size:0.9em">nom</code>, <code style="font-family:'DM Mono',monospace;font-size:0.9em">emoji</code>, <code style="font-family:'DM Mono',monospace;font-size:0.9em">categorie</code> ou <code style="font-family:'DM Mono',monospace;font-size:0.9em">prix</code> sont manquants, le produit est <strong>ignoré</strong> et compté dans les erreurs — les autres produits du même fichier sont quand même importés.</div>
+    </div>
+
+    <!-- 3. CATEGORIES -->
+    <div class="section" id="categories">
+      <div class="section-num">03</div>
+      <div class="section-title">Catégories disponibles</div>
+      <p>Le champ <strong>categorie</strong> doit être exactement l'une de ces 4 valeurs (en minuscules) :</p>
+
+      <div class="cats-grid">
+        <div class="cat-card">
+          <div class="cat-emoji">👟</div>
+          <div><div class="cat-info-name">Mode</div><div class="cat-info-val">"categorie": "mode"</div></div>
+        </div>
+        <div class="cat-card">
+          <div class="cat-emoji">💻</div>
+          <div><div class="cat-info-name">Tech</div><div class="cat-info-val">"categorie": "tech"</div></div>
+        </div>
+        <div class="cat-card">
+          <div class="cat-emoji">🎮</div>
+          <div><div class="cat-info-name">Gaming</div><div class="cat-info-val">"categorie": "gaming"</div></div>
+        </div>
+        <div class="cat-card">
+          <div class="cat-emoji">🍕</div>
+          <div><div class="cat-info-name">Food</div><div class="cat-info-val">"categorie": "food"</div></div>
+        </div>
+      </div>
+
+      <div class="callout err"><strong>Erreur fréquente :</strong> Écrire <code style="font-family:'DM Mono',monospace;font-size:0.9em">"Mode"</code> avec une majuscule ou <code style="font-family:'DM Mono',monospace;font-size:0.9em">"Mode 👟"</code> avec l'emoji — l'API accepte uniquement les valeurs exactes en minuscules.</div>
+    </div>
+
+    <!-- 4. EXEMPLES -->
+    <div class="section" id="exemples">
+      <div class="section-num">04</div>
+      <div class="section-title">Exemples complets</div>
+      <p>Des exemples prêts à copier-coller directement dans le panel d'import.</p>
+
+      <p><strong>Exemple minimal — 3 produits, champs requis uniquement :</strong></p>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">JSON</span>
+          <button class="code-copy" onclick="copierBloc(this, 1)">Copier</button>
+        </div>
+        <div class="code-body" id="ex1"><span class="c-bracket">[</span>
+  <span class="c-bracket">{</span>
+    <span class="c-key">"nom"</span>: <span class="c-str">"Casquette NY"</span>,
+    <span class="c-key">"emoji"</span>: <span class="c-str">"🧢"</span>,
+    <span class="c-key">"categorie"</span>: <span class="c-str">"mode"</span>,
+    <span class="c-key">"prix"</span>: <span class="c-num">24.99</span>
+  <span class="c-bracket">}</span>,
+  <span class="c-bracket">{</span>
+    <span class="c-key">"nom"</span>: <span class="c-str">"Souris Gaming"</span>,
+    <span class="c-key">"emoji"</span>: <span class="c-str">"🖱️"</span>,
+    <span class="c-key">"categorie"</span>: <span class="c-str">"gaming"</span>,
+    <span class="c-key">"prix"</span>: <span class="c-num">49.99</span>
+  <span class="c-bracket">}</span>,
+  <span class="c-bracket">{</span>
+    <span class="c-key">"nom"</span>: <span class="c-str">"Box Ramen Premium"</span>,
+    <span class="c-key">"emoji"</span>: <span class="c-str">"🍜"</span>,
+    <span class="c-key">"categorie"</span>: <span class="c-str">"food"</span>,
+    <span class="c-key">"prix"</span>: <span class="c-num">22.50</span>
+  <span class="c-bracket">}</span>
+<span class="c-bracket">]</span></div>
+      </div>
+
+      <p><strong>Exemple complet — tous les champs :</strong></p>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">JSON</span>
+          <button class="code-copy" onclick="copierBloc(this, 2)">Copier</button>
+        </div>
+        <div class="code-body" id="ex2"><span class="c-bracket">[</span>
+  <span class="c-bracket">{</span>
+    <span class="c-key">"nom"</span>: <span class="c-str">"Jordan 1 Low"</span>,
+    <span class="c-key">"emoji"</span>: <span class="c-str">"👟"</span>,
+    <span class="c-key">"categorie"</span>: <span class="c-str">"mode"</span>,
+    <span class="c-key">"prix"</span>: <span class="c-num">119.99</span>,
+    <span class="c-key">"description"</span>: <span class="c-str">"Colorway exclusif, édition limitée 2026"</span>,
+    <span class="c-key">"badge"</span>: <span class="c-str">"LIMITED"</span>
+  <span class="c-bracket">}</span>,
+  <span class="c-bracket">{</span>
+    <span class="c-key">"nom"</span>: <span class="c-str">"Clavier Mécanique TKL"</span>,
+    <span class="c-key">"emoji"</span>: <span class="c-str">"⌨️"</span>,
+    <span class="c-key">"categorie"</span>: <span class="c-str">"tech"</span>,
+    <span class="c-key">"prix"</span>: <span class="c-num">129.99</span>,
+    <span class="c-key">"description"</span>: <span class="c-str">"Switches red, rétroéclairage RGB"</span>,
+    <span class="c-key">"badge"</span>: <span class="c-null">null</span>
+  <span class="c-bracket">}</span>
+<span class="c-bracket">]</span></div>
+      </div>
+
+      <div class="callout ok"><strong>Astuce :</strong> Tu peux générer un fichier JSON avec ChatGPT ou Claude en demandant "génère moi 10 produits gaming au format NathStore JSON" — colle juste la structure des champs dans ton prompt.</div>
+    </div>
+
+    <!-- 5. ERREURS -->
+    <div class="section" id="erreurs">
+      <div class="section-num">05</div>
+      <div class="section-title">Erreurs fréquentes</div>
+
+      <div class="errors-list">
+        <div class="error-item">
+          <div class="error-label">JSON invalide — SyntaxError</div>
+          <div class="error-desc">Virgule manquante entre deux objets, accolade non fermée, guillemets manquants autour d'une clé. Utilise un validateur JSON en ligne pour vérifier.</div>
+        </div>
+        <div class="error-item">
+          <div class="error-label">Produits ignorés — champs manquants</div>
+          <div class="error-desc">Un ou plusieurs produits ont été ignorés car nom, emoji, categorie ou prix est absent. Le message d'import affiche le nombre d'ignorés.</div>
+        </div>
+        <div class="error-item">
+          <div class="error-label">Catégorie invalide</div>
+          <div class="error-desc">La valeur de "categorie" n'est pas exactement "mode", "tech", "gaming" ou "food" en minuscules. Vérifie les majuscules et les espaces.</div>
+        </div>
+        <div class="error-item">
+          <div class="error-label">Prix avec virgule</div>
+          <div class="error-desc">En JSON, les décimaux s'écrivent avec un point : 29.99 et non 29,99. La virgule casse la syntaxe JSON.</div>
+        </div>
+        <div class="error-item">
+          <div class="error-label">Serveur inaccessible</div>
+          <div class="error-desc">Le backend Node.js n'est pas lancé. Ouvre un terminal et tape : cd projet-banque/banque && node index.js</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. CONSEILS -->
+    <div class="section" id="conseils">
+      <div class="section-num">06</div>
+      <div class="section-title">Conseils & astuces</div>
+
+      <p><strong>Valider son JSON avant d'importer</strong> — colle ton JSON sur <a href="https://jsonlint.com" target="_blank" style="color:var(--blue)">jsonlint.com</a> pour vérifier qu'il n'y a aucune erreur de syntaxe avant d'importer.</p>
+
+      <p><strong>Importer par petits lots</strong> — si tu as 100 produits, importe-les en plusieurs fois de 20-30. En cas d'erreur, c'est plus facile à identifier.</p>
+
+      <p><strong>Créer un fichier .json dédié</strong> — plutôt que de tout coller à chaque fois, crée un fichier <code style="font-family:'DM Mono',monospace;font-size:0.9em;background:var(--bg-3);padding:2px 6px;border-radius:2px">produits.json</code> dans ton projet et utilise l'onglet upload. Tu peux le modifier et le réimporter facilement.</p>
+
+      <p><strong>Structure de fichier recommandée :</strong></p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">Arborescence</span></div>
+        <div class="code-body"><span class="c-comment">projet-banque/</span>
+<span class="c-comment">├── banque/</span>
+<span class="c-comment">├── banque-frontend/</span>
+<span class="c-comment">├── nathstore/</span>
+<span class="c-str">└── produits.json</span>   <span class="c-comment">← ton fichier de produits ici</span></div>
+      </div>
+
+      <div class="callout info"><strong>Tip :</strong> Le badge peut être n'importe quelle courte chaîne de texte — "NEW", "PROMO", "TOP", "SOLD OUT", "LIMITED", "-20%"... Garde-le court (max 10 caractères) pour que ça rentre dans la vignette.</div>
+    </div>
+
+  </main>
+
+  <footer>
+    NathStore Admin — Guide Import JSON — © 2026 Nathanael
+  </footer>
+
+  <script>
+    function copier(btn, text) {
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = '✓ Copié';
+        setTimeout(() => btn.textContent = 'Copier', 2000);
+      });
+    }
+
+    const exemples = {
+      1: `[\n  {\n    "nom": "Casquette NY",\n    "emoji": "🧢",\n    "categorie": "mode",\n    "prix": 24.99\n  },\n  {\n    "nom": "Souris Gaming",\n    "emoji": "🖱️",\n    "categorie": "gaming",\n    "prix": 49.99\n  },\n  {\n    "nom": "Box Ramen Premium",\n    "emoji": "🍜",\n    "categorie": "food",\n    "prix": 22.50\n  }\n]`,
+      2: `[\n  {\n    "nom": "Jordan 1 Low",\n    "emoji": "👟",\n    "categorie": "mode",\n    "prix": 119.99,\n    "description": "Colorway exclusif, édition limitée 2026",\n    "badge": "LIMITED"\n  },\n  {\n    "nom": "Clavier Mécanique TKL",\n    "emoji": "⌨️",\n    "categorie": "tech",\n    "prix": 129.99,\n    "description": "Switches red, rétroéclairage RGB",\n    "badge": null\n  }\n]`
+    };
+
+    function copierBloc(btn, num) {
+      navigator.clipboard.writeText(exemples[num]).then(() => {
+        btn.textContent = '✓ Copié';
+        setTimeout(() => btn.textContent = 'Copier', 2000);
+      });
+    }
+  </script>
+</body>
+</html>

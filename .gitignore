@@ -1,0 +1,5 @@
+banque/node_modules/
+nathnotes/node_modules
+nathnotes/nathnotes.db
+banque/banque.db
+.env

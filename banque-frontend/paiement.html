@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NathBank — Paiement</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --or: #c9a84c;
+      --or-clair: #e8c97a;
+      --noir: #080808;
+      --noir-2: #111111;
+      --noir-3: #1a1a1a;
+      --gris: #2a2a2a;
+      --texte: #e8e0d0;
+      --texte-dim: #6b6355;
+      --vert: #4caf7d;
+      --rouge: #e05555;
+    }
+
+    body {
+      background: var(--noir);
+      color: var(--texte);
+      font-family: 'DM Mono', monospace;
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(201,168,76,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201,168,76,0.02) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+
+    nav {
+      border-bottom: 1px solid var(--gris);
+      padding: 20px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(8,8,8,0.95);
+      backdrop-filter: blur(10px);
+    }
+
+    .nav-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 24px;
+      color: var(--or);
+      letter-spacing: 4px;
+    }
+
+    .btn-back {
+      background: none;
+      border: 1px solid var(--gris);
+      color: var(--texte-dim);
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-back:hover { border-color: var(--or); color: var(--or); }
+
+    main {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 64px 40px;
+      animation: fadeUp 0.6s ease forwards;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .page-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 36px;
+      font-weight: 300;
+      margin-bottom: 8px;
+      color: var(--texte);
+    }
+
+    .page-subtitle {
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: var(--texte-dim);
+      margin-bottom: 48px;
+    }
+
+    /* Solde disponible */
+    .solde-badge {
+      background: var(--noir-2);
+      border: 1px solid rgba(201,168,76,0.2);
+      padding: 20px 24px;
+      margin-bottom: 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .solde-badge-label {
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--texte-dim);
+    }
+
+    .solde-badge-value {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px;
+      color: var(--or);
+    }
+
+    /* Form */
+    .card {
+      background: var(--noir-2);
+      border: 1px solid var(--gris);
+      padding: 40px;
+      position: relative;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--or), transparent);
+    }
+
+    .form { display: flex; flex-direction: column; gap: 24px; }
+
+    .field { display: flex; flex-direction: column; gap: 8px; }
+
+    label {
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--texte-dim);
+    }
+
+    input {
+      background: var(--noir-3);
+      border: 1px solid var(--gris);
+      color: var(--texte);
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      padding: 14px 16px;
+      outline: none;
+      transition: border-color 0.3s;
+      width: 100%;
+    }
+
+    input:focus { border-color: var(--or); }
+    input::placeholder { color: var(--texte-dim); }
+
+    /* Montant big input */
+    .montant-wrapper {
+      position: relative;
+    }
+
+    .montant-wrapper input {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 32px;
+      padding: 16px 50px 16px 16px;
+      font-weight: 300;
+    }
+
+    .montant-devise {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 24px;
+      color: var(--or);
+      pointer-events: none;
+    }
+
+    .btn {
+      background: var(--or);
+      color: var(--noir);
+      border: none;
+      padding: 18px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.1s;
+      margin-top: 8px;
+    }
+
+    .btn:hover { background: var(--or-clair); }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { background: var(--gris); color: var(--texte-dim); cursor: not-allowed; }
+
+    .message {
+      font-size: 12px;
+      padding: 14px 18px;
+      margin-top: 8px;
+      display: none;
+      letter-spacing: 1px;
+      line-height: 1.6;
+    }
+
+    .message.success {
+      background: rgba(76,175,125,0.1);
+      border: 1px solid rgba(76,175,125,0.3);
+      color: var(--vert);
+      display: block;
+    }
+
+    .message.error {
+      background: rgba(255,60,60,0.08);
+      border: 1px solid rgba(255,60,60,0.2);
+      color: var(--rouge);
+      display: block;
+    }
+
+    /* Succès overlay */
+    .success-overlay {
+      display: none;
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .success-overlay.show { display: block; }
+
+    .success-icon {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 64px;
+      color: var(--vert);
+      margin-bottom: 16px;
+    }
+
+    .success-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px;
+      font-weight: 300;
+      margin-bottom: 8px;
+    }
+
+    .success-text {
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: var(--texte-dim);
+      margin-bottom: 32px;
+    }
+
+    .btn-retour {
+      display: inline-block;
+      background: none;
+      border: 1px solid var(--or);
+      color: var(--or);
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 12px 24px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.3s;
+    }
+
+    .btn-retour:hover { background: var(--or); color: var(--noir); }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-logo">NathBank</div>
+    <a href="dashboard.html" class="btn-back">← Retour</a>
+  </nav>
+
+  <main>
+    <h1 class="page-title">Effectuer un paiement</h1>
+    <p class="page-subtitle">Transfert sécurisé depuis votre compte</p>
+
+    <div class="solde-badge">
+      <span class="solde-badge-label">Solde disponible</span>
+      <span class="solde-badge-value" id="soldeDisponible">—€</span>
+    </div>
+
+    <div class="card">
+      <!-- Formulaire -->
+      <div id="formWrapper">
+        <form class="form" onsubmit="payer(event)">
+          <div class="field">
+            <label>Description</label>
+            <input type="text" id="description" placeholder="Achat sur NathStore..." required>
+          </div>
+          <div class="field">
+            <label>Montant</label>
+            <div class="montant-wrapper">
+              <input type="number" id="montant" placeholder="0.00" min="0.01" step="0.01" required>
+              <span class="montant-devise">€</span>
+            </div>
+          </div>
+          <button type="submit" class="btn" id="btnPayer">Confirmer le paiement</button>
+          <div class="message" id="payMsg"></div>
+        </form>
+      </div>
+
+      <!-- Succès -->
+      <div class="success-overlay" id="successOverlay">
+        <div class="success-icon">✓</div>
+        <div class="success-title">Paiement validé</div>
+        <div class="success-text" id="successText">—</div>
+        <a href="dashboard.html" class="btn-retour">Retour au dashboard</a>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const API = 'http://localhost:3000';
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = 'index.html';
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    };
+
+    // Charger le solde
+    async function loadSolde() {
+      try {
+        const res = await fetch(`${API}/api/comptes/solde`, { headers });
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById('soldeDisponible').textContent = data.solde.toFixed(2) + '€';
+        }
+      } catch {}
+    }
+
+    async function payer(e) {
+      e.preventDefault();
+      const montant = parseFloat(document.getElementById('montant').value);
+      const description = document.getElementById('description').value;
+      const btn = document.getElementById('btnPayer');
+
+      btn.disabled = true;
+      btn.textContent = 'Traitement en cours...';
+
+      try {
+        const res = await fetch(`${API}/api/transactions/payer`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ montant, description })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          document.getElementById('formWrapper').style.display = 'none';
+          document.getElementById('successOverlay').classList.add('show');
+          document.getElementById('successText').textContent = 
+            `${montant.toFixed(2)}€ débités · Nouveau solde : ${data.nouveau_solde.toFixed(2)}€`;
+        } else {
+          document.getElementById('payMsg').textContent = data.erreur || 'Erreur';
+          document.getElementById('payMsg').className = 'message error';
+          btn.disabled = false;
+          btn.textContent = 'Confirmer le paiement';
+        }
+      } catch {
+        document.getElementById('payMsg').textContent = 'Serveur inaccessible';
+        document.getElementById('payMsg').className = 'message error';
+        btn.disabled = false;
+        btn.textContent = 'Confirmer le paiement';
+      }
+    }
+
+    loadSolde();
+  </script>
+</body>
+</html>

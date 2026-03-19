@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NathBank — Connexion</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --or: #c9a84c;
+      --or-clair: #e8c97a;
+      --noir: #080808;
+      --noir-2: #111111;
+      --noir-3: #1a1a1a;
+      --gris: #2a2a2a;
+      --texte: #e8e0d0;
+      --texte-dim: #6b6355;
+    }
+
+    body {
+      background: var(--noir);
+      color: var(--texte);
+      font-family: 'DM Mono', monospace;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Fond animé */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: 
+        radial-gradient(ellipse 80% 50% at 20% 50%, rgba(201,168,76,0.04) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 80% 20%, rgba(201,168,76,0.03) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    /* Grille de fond */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(201,168,76,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201,168,76,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 440px;
+      padding: 20px;
+      position: relative;
+      z-index: 1;
+      animation: fadeUp 0.8s ease forwards;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .logo-symbol {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 48px;
+      font-weight: 300;
+      color: var(--or);
+      letter-spacing: 8px;
+      display: block;
+      line-height: 1;
+    }
+
+    .logo-name {
+      font-size: 11px;
+      letter-spacing: 6px;
+      color: var(--texte-dim);
+      text-transform: uppercase;
+      margin-top: 8px;
+      display: block;
+    }
+
+    .card {
+      background: var(--noir-2);
+      border: 1px solid rgba(201,168,76,0.15);
+      padding: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--or), transparent);
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      margin-bottom: 36px;
+      border-bottom: 1px solid var(--gris);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 12px;
+      background: none;
+      border: none;
+      color: var(--texte-dim);
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: color 0.3s;
+      position: relative;
+    }
+
+    .tab.active {
+      color: var(--or);
+    }
+
+    .tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px; left: 0; right: 0;
+      height: 1px;
+      background: var(--or);
+    }
+
+    /* Form */
+    .form { display: none; flex-direction: column; gap: 20px; }
+    .form.active { display: flex; }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    label {
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--texte-dim);
+    }
+
+    input {
+      background: var(--noir-3);
+      border: 1px solid var(--gris);
+      color: var(--texte);
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      padding: 14px 16px;
+      outline: none;
+      transition: border-color 0.3s;
+      width: 100%;
+    }
+
+    input:focus {
+      border-color: var(--or);
+    }
+
+    input::placeholder { color: var(--texte-dim); }
+
+    .btn {
+      background: var(--or);
+      color: var(--noir);
+      border: none;
+      padding: 16px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.1s;
+      margin-top: 8px;
+      font-weight: 400;
+    }
+
+    .btn:hover { background: var(--or-clair); }
+    .btn:active { transform: scale(0.98); }
+
+    .message {
+      font-size: 12px;
+      padding: 12px 16px;
+      margin-top: 8px;
+      display: none;
+      letter-spacing: 1px;
+    }
+
+    .message.success {
+      background: rgba(201,168,76,0.1);
+      border: 1px solid rgba(201,168,76,0.3);
+      color: var(--or-clair);
+      display: block;
+    }
+
+    .message.error {
+      background: rgba(255,60,60,0.08);
+      border: 1px solid rgba(255,60,60,0.2);
+      color: #ff6b6b;
+      display: block;
+    }
+
+    .footer-note {
+      text-align: center;
+      margin-top: 32px;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--texte-dim);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <span class="logo-symbol">N</span>
+      <span class="logo-name">NathBank · Système Bancaire</span>
+    </div>
+
+    <div class="card">
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('login')">Connexion</button>
+        <button class="tab" onclick="switchTab('register')">Créer un compte</button>
+      </div>
+
+      <!-- Login -->
+      <form class="form active" id="loginForm" onsubmit="login(event)">
+        <div class="field">
+          <label>Adresse email</label>
+          <input type="email" id="loginEmail" placeholder="vous@email.com" required>
+        </div>
+        <div class="field">
+          <label>Mot de passe</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn">Accéder au compte</button>
+        <div class="message" id="loginMsg"></div>
+      </form>
+
+      <!-- Register -->
+      <form class="form" id="registerForm" onsubmit="register(event)">
+        <div class="field">
+          <label>Nom complet</label>
+          <input type="text" id="regNom" placeholder="Nathanael Dupont" required>
+        </div>
+        <div class="field">
+          <label>Adresse email</label>
+          <input type="email" id="regEmail" placeholder="vous@email.com" required>
+        </div>
+        <div class="field">
+          <label>Mot de passe</label>
+          <input type="password" id="regPassword" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn">Ouvrir un compte</button>
+        <div class="message" id="registerMsg"></div>
+      </form>
+    </div>
+
+    <p class="footer-note">Système sécurisé · Chiffrement JWT · © NathBank 2026</p>
+  </div>
+
+  <script>
+    const API = 'http://localhost:3000';
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach((t, i) => {
+        t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'));
+      });
+      document.getElementById('loginForm').classList.toggle('active', tab === 'login');
+      document.getElementById('registerForm').classList.toggle('active', tab === 'register');
+    }
+
+    function showMsg(id, text, type) {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      el.className = `message ${type}`;
+    }
+
+    async function login(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const mot_de_passe = document.getElementById('loginPassword').value;
+      try {
+        const res = await fetch(`${API}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, mot_de_passe })
+        });
+        const data = await res.json();
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('nom', data.nom);
+          showMsg('loginMsg', '✓ Connexion réussie, redirection...', 'success');
+          setTimeout(() => window.location.href = 'dashboard.html', 1000);
+        } else {
+          showMsg('loginMsg', data.erreur || 'Erreur de connexion', 'error');
+        }
+      } catch {
+        showMsg('loginMsg', 'Serveur inaccessible', 'error');
+      }
+    }
+
+    async function register(e) {
+      e.preventDefault();
+      const nom = document.getElementById('regNom').value;
+      const email = document.getElementById('regEmail').value;
+      const mot_de_passe = document.getElementById('regPassword').value;
+      try {
+        const res = await fetch(`${API}/api/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nom, email, mot_de_passe })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showMsg('registerMsg', '✓ Compte créé avec 100€ de départ !', 'success');
+          setTimeout(() => switchTab('login'), 1500);
+        } else {
+          showMsg('registerMsg', data.erreur || 'Erreur', 'error');
+        }
+      } catch {
+        showMsg('registerMsg', 'Serveur inaccessible', 'error');
+      }
+    }
+
+    // Redirect si déjà connecté
+    if (localStorage.getItem('token')) window.location.href = 'dashboard.html';
+  </script>
+</body>
+</html>

@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NathBank — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --or: #c9a84c;
+      --or-clair: #e8c97a;
+      --noir: #080808;
+      --noir-2: #111111;
+      --noir-3: #1a1a1a;
+      --gris: #2a2a2a;
+      --texte: #e8e0d0;
+      --texte-dim: #6b6355;
+      --vert: #4caf7d;
+      --rouge: #e05555;
+    }
+
+    body {
+      background: var(--noir);
+      color: var(--texte);
+      font-family: 'DM Mono', monospace;
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(201,168,76,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201,168,76,0.02) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+
+    /* NAV */
+    nav {
+      border-bottom: 1px solid var(--gris);
+      padding: 20px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      background: rgba(8,8,8,0.95);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+    }
+
+    .nav-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 24px;
+      color: var(--or);
+      letter-spacing: 4px;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .nav-user {
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: var(--texte-dim);
+    }
+
+    .btn-logout {
+      background: none;
+      border: 1px solid var(--gris);
+      color: var(--texte-dim);
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-logout:hover {
+      border-color: var(--rouge);
+      color: var(--rouge);
+    }
+
+    /* MAIN */
+    main {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 48px 40px;
+      animation: fadeUp 0.6s ease forwards;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* SOLDE CARD */
+    .solde-card {
+      background: var(--noir-2);
+      border: 1px solid rgba(201,168,76,0.2);
+      padding: 48px;
+      margin-bottom: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .solde-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--or), transparent);
+    }
+
+    .solde-card::after {
+      content: 'N';
+      position: absolute;
+      right: 40px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 160px;
+      color: rgba(201,168,76,0.04);
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    .solde-label {
+      font-size: 10px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--texte-dim);
+      margin-bottom: 16px;
+    }
+
+    .solde-montant {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 72px;
+      font-weight: 300;
+      color: var(--texte);
+      line-height: 1;
+      letter-spacing: -2px;
+    }
+
+    .solde-devise {
+      font-size: 24px;
+      color: var(--or);
+      margin-left: 8px;
+    }
+
+    .solde-meta {
+      margin-top: 20px;
+      font-size: 11px;
+      color: var(--texte-dim);
+      letter-spacing: 2px;
+    }
+
+    /* GRID */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--noir-2);
+      border: 1px solid var(--gris);
+      padding: 28px;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--texte-dim);
+      margin-bottom: 12px;
+    }
+
+    .stat-value {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 32px;
+      font-weight: 300;
+    }
+
+    .stat-value.vert { color: var(--vert); }
+    .stat-value.rouge { color: var(--rouge); }
+
+    /* TRANSACTIONS */
+    .section-title {
+      font-size: 10px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--texte-dim);
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--gris);
+    }
+
+    .transactions-list {
+      background: var(--noir-2);
+      border: 1px solid var(--gris);
+    }
+
+    .transaction-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 28px;
+      border-bottom: 1px solid var(--gris);
+      transition: background 0.2s;
+    }
+
+    .transaction-item:last-child { border-bottom: none; }
+    .transaction-item:hover { background: var(--noir-3); }
+
+    .tx-left { display: flex; flex-direction: column; gap: 4px; }
+
+    .tx-desc {
+      font-size: 13px;
+      color: var(--texte);
+    }
+
+    .tx-date {
+      font-size: 10px;
+      color: var(--texte-dim);
+      letter-spacing: 1px;
+    }
+
+    .tx-montant {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px;
+      color: var(--rouge);
+    }
+
+    .empty-state {
+      padding: 48px;
+      text-align: center;
+      color: var(--texte-dim);
+      font-size: 12px;
+      letter-spacing: 2px;
+    }
+
+    /* BTN PAYER */
+    .btn-payer {
+      display: block;
+      width: 100%;
+      background: var(--or);
+      color: var(--noir);
+      border: none;
+      padding: 18px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.3s;
+      text-align: center;
+      text-decoration: none;
+      margin-top: 24px;
+    }
+
+    .btn-payer:hover { background: var(--or-clair); }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-logo">NathBank</div>
+    <div class="nav-right">
+      <span class="nav-user" id="navUser">—</span>
+      <button class="btn-logout" onclick="logout()">Déconnexion</button>
+    </div>
+  </nav>
+
+  <main>
+    <!-- Solde principal -->
+    <div class="solde-card">
+      <div class="solde-label">Solde disponible</div>
+      <div class="solde-montant">
+        <span id="soldeValue">—</span><span class="solde-devise">€</span>
+      </div>
+      <div class="solde-meta" id="soldeMeta">Chargement...</div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid">
+      <div class="stat-card">
+        <div class="stat-label">Total dépensé</div>
+        <div class="stat-value rouge" id="totalDepense">—€</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Nb transactions</div>
+        <div class="stat-value vert" id="nbTransactions">—</div>
+      </div>
+    </div>
+
+    <!-- Transactions -->
+    <div class="section-title">Historique des transactions</div>
+    <div class="transactions-list" id="transactionsList">
+      <div class="empty-state">Chargement...</div>
+    </div>
+
+    <div style="display:flex; gap:16px; margin-top:24px;">
+  <a href="paiement.html" class="btn-payer" style="flex:2;text-align:center;">→ Effectuer un paiement</a>
+  <button class="btn-payer" onclick="openDepot()" style="flex:1;background:none;border:1px solid var(--or);color:var(--or);">+ Déposer</button>
+</div>
+
+<!-- MODAL DEPOT -->
+<div id="depotOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:var(--noir-2);border:1px solid rgba(201,168,76,0.2);padding:48px;width:100%;max-width:400px;position:relative;">
+    <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--or),transparent);"></div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;margin-bottom:8px;">Déposer des fonds</div>
+    <div style="font-size:11px;letter-spacing:2px;color:var(--texte-dim);margin-bottom:32px;">Créditer votre compte NathBank</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px;">
+      <label style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--texte-dim);">Montant (max 10 000€)</label>
+      <div style="position:relative;">
+        <input type="number" id="depotMontant" placeholder="0.00" min="1" max="10000000000" step="0.01"
+          style="background:var(--noir-3);border:1px solid var(--gris);color:var(--texte);font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;padding:16px 50px 16px 16px;outline:none;width:100%;border-radius:0;">
+        <span style="position:absolute;right:16px;top:50%;transform:translateY(-50%);font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--or);">€</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;">
+      <button onclick="closeDepot()" style="flex:1;background:none;border:1px solid var(--gris);color:var(--texte-dim);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;padding:14px;cursor:pointer;">Annuler</button>
+      <button onclick="deposer()" id="btnDeposer" style="flex:2;background:var(--or);color:var(--noir);border:none;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;padding:14px;cursor:pointer;">Confirmer</button>
+    </div>
+    <div id="depotMsg" style="font-size:12px;padding:12px 16px;margin-top:12px;letter-spacing:1px;display:none;"></div>
+  </div>
+</div>
+  </main>
+
+  <script>
+    const API = 'http://localhost:3000';
+    const token = localStorage.getItem('token');
+    const nom = localStorage.getItem('nom');
+
+    if (!token) window.location.href = 'index.html';
+
+    document.getElementById('navUser').textContent = nom || '—';
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    };
+
+    async function loadDashboard() {
+      // Charger le solde
+      try {
+        const res = await fetch(`${API}/api/comptes/solde`, { headers });
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById('soldeValue').textContent = data.solde.toFixed(2);
+          document.getElementById('soldeMeta').textContent = `Compte actif · ${data.devise}`;
+        } else {
+          logout();
+        }
+      } catch {
+        document.getElementById('soldeMeta').textContent = 'Erreur de chargement';
+      }
+
+      // Charger les transactions
+      try {
+        const res = await fetch(`${API}/api/transactions/historique`, { headers });
+        const transactions = await res.json();
+        const list = document.getElementById('transactionsList');
+
+        if (!transactions.length) {
+          list.innerHTML = '<div class="empty-state">Aucune transaction pour le moment</div>';
+          document.getElementById('totalDepense').textContent = '0.00€';
+          document.getElementById('nbTransactions').textContent = '0';
+          return;
+        }
+
+        const total = transactions.reduce((sum, t) => sum + t.montant, 0);
+        document.getElementById('totalDepense').textContent = total.toFixed(2) + '€';
+        document.getElementById('nbTransactions').textContent = transactions.length;
+
+        list.innerHTML = transactions.map(t => `
+          <div class="transaction-item">
+            <div class="tx-left">
+              <span class="tx-desc">${t.description || 'Paiement'}</span>
+              <span class="tx-date">${new Date(t.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
+            <span class="tx-montant">−${t.montant.toFixed(2)}€</span>
+          </div>
+        `).join('');
+      } catch {
+        document.getElementById('transactionsList').innerHTML = '<div class="empty-state">Erreur de chargement</div>';
+      }
+    }
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = 'index.html';
+    }
+    
+function openDepot() {
+  document.getElementById('depotOverlay').style.display = 'flex';
+  document.getElementById('depotMsg').style.display = 'none';
+  document.getElementById('depotMontant').value = '';
+}
+
+function closeDepot() {
+  document.getElementById('depotOverlay').style.display = 'none';
+}
+
+async function deposer() {
+  const montant = parseFloat(document.getElementById('depotMontant').value);
+  const btn = document.getElementById('btnDeposer');
+  const msg = document.getElementById('depotMsg');
+
+  if (!montant || montant <= 0) {
+    msg.textContent = 'Montant invalide';
+    msg.style.cssText = 'display:block;background:rgba(255,60,60,0.08);border:1px solid rgba(255,60,60,0.2);color:#ff6b6b;font-size:12px;padding:12px 16px;margin-top:12px;letter-spacing:1px;';
+    return;
+  }
+
+  btn.textContent = 'Traitement...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`${API}/api/comptes/deposer`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ montant })
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      msg.textContent = `✓ ${montant.toFixed(2)}€ déposés ! Nouveau solde : ${data.nouveau_solde.toFixed(2)}€`;
+      msg.style.cssText = 'display:block;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);color:var(--or-clair);font-size:12px;padding:12px 16px;margin-top:12px;letter-spacing:1px;';
+      setTimeout(() => { closeDepot(); loadDashboard(); }, 1500);
+    } else {
+      msg.textContent = data.erreur || 'Erreur';
+      msg.style.cssText = 'display:block;background:rgba(255,60,60,0.08);border:1px solid rgba(255,60,60,0.2);color:#ff6b6b;font-size:12px;padding:12px 16px;margin-top:12px;letter-spacing:1px;';
+    }
+  } catch {
+    msg.textContent = 'Serveur inaccessible';
+    msg.style.cssText = 'display:block;background:rgba(255,60,60,0.08);border:1px solid rgba(255,60,60,0.2);color:#ff6b6b;font-size:12px;padding:12px 16px;margin-top:12px;letter-spacing:1px;';
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Confirmer';
+}
+
+    loadDashboard();
+  </script>
+</body>
+</html>

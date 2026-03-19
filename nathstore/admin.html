@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NathStore — Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --accent: #ff4d1c; --accent-2: #ff7a4d; --vert: #4caf7d; --rouge: #e05555; --purple: #a78bfa; }
+    [data-theme="dark"] { --bg: #0a0a0a; --bg-2: #141414; --bg-3: #1e1e1e; --border: #2a2a2a; --text: #f0ece4; --text-dim: #5a5650; --text-mid: #8a8070; }
+    [data-theme="light"] { --bg: #f5f2ee; --bg-2: #ffffff; --bg-3: #ede9e3; --border: #ddd8d0; --text: #1a1714; --text-dim: #b0a898; --text-mid: #7a7060; }
+    body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; transition: background 0.3s, color 0.3s; }
+    .login-wrapper { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .login-card { background: var(--bg-2); border: 1px solid var(--border); padding: 48px; width: 100%; max-width: 400px; position: relative; }
+    .login-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--accent); }
+    .login-logo { font-family: 'Instrument Serif', serif; font-size: 28px; font-style: italic; margin-bottom: 4px; }
+    .login-logo span { color: var(--accent); }
+    .login-sub { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 3px; color: var(--text-dim); margin-bottom: 36px; }
+    .field { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+    label { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); font-family: 'DM Mono', monospace; }
+    input, select, textarea { background: var(--bg-3); border: 1px solid var(--border); color: var(--text); font-family: 'DM Mono', monospace; font-size: 13px; padding: 12px 16px; outline: none; transition: border-color 0.3s; width: 100%; border-radius: 2px; }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+    input::placeholder, textarea::placeholder { color: var(--text-dim); }
+    textarea { resize: vertical; line-height: 1.5; }
+    .btn { width: 100%; background: var(--accent); color: white; border: none; padding: 14px; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: background 0.2s; border-radius: 2px; margin-top: 8px; }
+    .btn:hover { background: var(--accent-2); }
+    .msg { font-size: 11px; padding: 12px 16px; margin-top: 12px; display: none; letter-spacing: 1px; border-radius: 2px; font-family: 'DM Mono', monospace; }
+    .msg.success { background: rgba(76,175,125,0.1); border: 1px solid rgba(76,175,125,0.3); color: var(--vert); display: block; }
+    .msg.error { background: rgba(255,77,28,0.08); border: 1px solid rgba(255,77,28,0.2); color: var(--accent); display: block; }
+    .msg.info { background: rgba(100,150,255,0.08); border: 1px solid rgba(100,150,255,0.2); color: #7aabff; display: block; }
+    #adminPanel { display: none; }
+    nav { position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); padding: 0 40px; height: 64px; display: flex; align-items: center; justify-content: space-between; background: rgba(10,10,10,0.95); backdrop-filter: blur(20px); }
+    [data-theme="light"] nav { background: rgba(245,242,238,0.95); }
+    .nav-logo { font-family: 'Instrument Serif', serif; font-size: 20px; font-style: italic; }
+    .nav-logo span { color: var(--accent); }
+    .nav-badge { background: var(--accent); color: white; font-size: 9px; font-weight: 700; letter-spacing: 2px; padding: 3px 10px; border-radius: 100px; margin-left: 10px; }
+    .nav-right { display: flex; gap: 12px; align-items: center; }
+    .btn-sm { background: none; border: 1px solid var(--border); color: var(--text-mid); font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 600; padding: 7px 16px; cursor: pointer; transition: all 0.2s; border-radius: 2px; text-decoration: none; display: inline-flex; align-items: center; }
+    .btn-sm:hover { border-color: var(--text); color: var(--text); }
+    .btn-sm.danger:hover { border-color: var(--rouge); color: var(--rouge); }
+    .btn-sm.accent { border-color: #7aabff; color: #7aabff; }
+    .btn-sm.accent:hover { background: #7aabff; color: #000; }
+    main { max-width: 1100px; margin: 0 auto; padding: 48px 40px; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 40px; }
+    .stat { background: var(--bg-2); border: 1px solid var(--border); padding: 24px; border-radius: 4px; }
+    .stat-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; }
+    .stat-value { font-family: 'Instrument Serif', serif; font-size: 36px; font-style: italic; color: var(--accent); }
+    .stat-value.purple { color: var(--purple); }
+    .section-title { font-family: 'Instrument Serif', serif; font-size: 24px; font-style: italic; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .add-form { background: var(--bg-2); border: 1px solid var(--border); padding: 32px; border-radius: 4px; margin-bottom: 40px; position: relative; }
+    .add-form::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--accent); border-radius: 4px 4px 0 0; }
+    .add-form.purple-top::before { background: var(--purple); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 80px; gap: 16px; margin-bottom: 20px; }
+    .btn-add { background: var(--accent); color: white; border: none; padding: 12px 28px; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: background 0.2s; border-radius: 2px; }
+    .btn-add:hover { background: var(--accent-2); }
+    .btn-add.purple { background: var(--purple); color: #000; }
+    .btn-add.purple:hover { background: #c4b5fd; }
+    .import-section { background: var(--bg-2); border: 1px solid var(--border); padding: 32px; border-radius: 4px; margin-bottom: 40px; position: relative; }
+    .import-section::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: #7aabff; border-radius: 4px 4px 0 0; }
+    .import-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .import-tab { background: none; border: 1px solid var(--border); color: var(--text-mid); font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 600; padding: 8px 18px; cursor: pointer; transition: all 0.2s; border-radius: 2px; }
+    .import-tab.active { background: rgba(122,171,255,0.1); border-color: #7aabff; color: #7aabff; }
+    .import-pane { display: none; }
+    .import-pane.active { display: block; }
+    .upload-zone { border: 2px dashed var(--border); border-radius: 4px; padding: 40px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; }
+    .upload-zone:hover, .upload-zone.drag { border-color: #7aabff; background: rgba(100,150,255,0.04); }
+    .upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .upload-icon { font-size: 36px; margin-bottom: 12px; }
+    .upload-label { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-mid); }
+    .upload-label span { color: #7aabff; }
+    .upload-filename { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--vert); margin-top: 8px; }
+    .import-actions { display: flex; gap: 12px; margin-top: 16px; align-items: center; }
+    .btn-import { background: #7aabff; color: #000; border: none; padding: 12px 28px; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; border-radius: 2px; }
+    .btn-import:hover { background: #5590ff; color: white; }
+    .import-preview { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-mid); }
+    .progress-bar-wrap { background: var(--bg-3); border-radius: 2px; height: 4px; margin-top: 12px; overflow: hidden; display: none; }
+    .progress-bar { height: 100%; background: var(--vert); width: 0%; transition: width 0.3s; }
+    .table-wrapper { background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: var(--bg-3); padding: 12px 20px; text-align: left; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); font-weight: 400; }
+    td { padding: 16px 20px; border-top: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+    tr:hover td { background: var(--bg-3); }
+    .td-emoji { font-size: 24px; }
+    .badge-pill { background: rgba(255,77,28,0.15); color: var(--accent); font-size: 9px; font-weight: 700; letter-spacing: 2px; padding: 3px 10px; border-radius: 100px; }
+    .actif-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .actif-dot.on { background: var(--vert); }
+    .actif-dot.off { background: var(--rouge); }
+    .td-actions { display: flex; gap: 8px; }
+    .btn-edit { background: none; border: 1px solid var(--border); color: var(--text-mid); font-size: 11px; padding: 5px 12px; cursor: pointer; transition: all 0.2s; border-radius: 2px; font-family: 'Syne', sans-serif; font-weight: 600; }
+    .btn-edit:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-delete { background: none; border: 1px solid var(--border); color: var(--text-dim); font-size: 11px; padding: 5px 12px; cursor: pointer; transition: all 0.2s; border-radius: 2px; font-family: 'Syne', sans-serif; font-weight: 600; }
+    .btn-delete:hover { border-color: var(--rouge); color: var(--rouge); }
+    .empty-table { text-align: center; padding: 48px; color: var(--text-dim); font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 2px; }
+    /* CATS GRID */
+    .cats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .cat-card { background: var(--bg-3); border: 1px solid var(--border); padding: 16px 20px; border-radius: 4px; display: flex; align-items: center; justify-content: space-between; transition: border-color 0.2s; }
+    .cat-card:hover { border-color: var(--purple); }
+    .cat-card-left { display: flex; align-items: center; gap: 12px; }
+    .cat-card-emoji { font-size: 22px; }
+    .cat-card-nom { font-weight: 700; font-size: 13px; }
+    .cat-card-ordre { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-dim); }
+    /* MODAL */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 3000; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--bg-2); border: 1px solid var(--border); padding: 40px; width: 100%; max-width: 500px; position: relative; border-radius: 4px; max-height: 90vh; overflow-y: auto; }
+    .modal::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--accent); border-radius: 4px 4px 0 0; }
+    .modal.purple-modal::before { background: var(--purple); }
+    .modal-title { font-family: 'Instrument Serif', serif; font-size: 24px; font-style: italic; margin-bottom: 28px; }
+    .modal-btns { display: flex; gap: 12px; margin-top: 24px; }
+    .btn-cancel { flex: 1; background: none; border: 1px solid var(--border); color: var(--text-mid); padding: 12px; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; border-radius: 2px; }
+    .btn-cancel:hover { border-color: var(--text); color: var(--text); }
+    .btn-save { flex: 2; background: var(--accent); color: white; border: none; padding: 12px; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: background 0.2s; border-radius: 2px; }
+    .btn-save:hover { background: var(--accent-2); }
+    .btn-save.purple { background: var(--purple); color: #000; }
+    .btn-save.purple:hover { background: #c4b5fd; }
+    @media (max-width: 768px) { nav { padding: 0 20px; } main { padding: 24px 20px; } .stats { grid-template-columns: 1fr 1fr; } .form-grid, .form-grid-2, .form-grid-3 { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+  <div id="loginPanel" class="login-wrapper">
+    <div class="login-card">
+      <div class="login-logo">Nath<span>Store</span></div>
+      <div class="login-sub">// Panneau d'administration</div>
+      <div class="field"><label>Email admin</label><input type="email" id="adminEmail" placeholder="admin@nathstore.com"></div>
+      <div class="field"><label>Mot de passe</label><input type="password" id="adminPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter') loginAdmin()"></div>
+      <button class="btn" onclick="loginAdmin()">Accéder au panel →</button>
+      <div class="msg" id="loginMsg"></div>
+    </div>
+  </div>
+
+  <div id="adminPanel">
+    <nav>
+      <div>
+        <span class="nav-logo">Nath<span>Store</span></span>
+        <span class="nav-badge">ADMIN</span>
+      </div>
+      <div class="nav-right">
+        <a href="admin-help.html" class="btn-sm accent">📖 Guide JSON</a>
+        <a href="index.html" class="btn-sm">← Voir le shop</a>
+        <button class="btn-sm danger" onclick="logout()">Déconnexion</button>
+      </div>
+    </nav>
+
+    <main>
+
+      <!-- STATS -->
+      <div class="stats">
+        <div class="stat"><div class="stat-label">Total produits</div><div class="stat-value" id="statTotal">—</div></div>
+        <div class="stat"><div class="stat-label">Produits actifs</div><div class="stat-value" id="statActifs">—</div></div>
+        <div class="stat"><div class="stat-label">Prix moyen</div><div class="stat-value" id="statPrix">—</div></div>
+        <div class="stat"><div class="stat-label">Catégories</div><div class="stat-value purple" id="statCats">—</div></div>
+      </div>
+
+      <!-- CATEGORIES -->
+      <div class="section-title"><span>Gérer les catégories</span></div>
+      <div class="add-form purple-top">
+        <div class="form-grid-3">
+          <div class="field"><label>Nom (minuscules, sans espaces)</label><input type="text" id="newCatNom" placeholder="high-tech"></div>
+          <div class="field"><label>Emoji</label><input type="text" id="newCatEmoji" placeholder="🖥️"></div>
+          <div class="field"><label>Ordre</label><input type="number" id="newCatOrdre" placeholder="5" min="0"></div>
+        </div>
+        <button class="btn-add purple" onclick="ajouterCategorie()">+ Ajouter la catégorie</button>
+        <div class="msg" id="catMsg"></div>
+      </div>
+      <div class="cats-grid" id="catsGrid">
+        <div style="color:var(--text-dim);font-family:'DM Mono',monospace;font-size:12px;padding:20px">Chargement...</div>
+      </div>
+
+      <!-- IMPORT JSON -->
+      <div class="section-title" style="margin-top:20px">
+        <span>Import JSON en masse</span>
+        <a href="admin-help.html" class="btn-sm accent" style="font-size:10px">📖 Guide complet →</a>
+      </div>
+      <div class="import-section">
+        <div class="import-tabs">
+          <button class="import-tab active" onclick="switchTab('paste', this)">📋 Coller du JSON</button>
+          <button class="import-tab" onclick="switchTab('file', this)">📁 Uploader un fichier</button>
+        </div>
+        <div class="import-pane active" id="paneColler">
+          <div class="field">
+            <label>JSON — tableau de produits</label>
+            <textarea id="jsonInput" rows="8" placeholder='[{"nom":"Air Max","emoji":"👟","categorie":"mode","prix":89.99}]'></textarea>
+          </div>
+          <div class="import-actions">
+            <button class="btn-import" onclick="importerJSON()">⬆ Importer</button>
+            <span class="import-preview" id="previewPaste"></span>
+          </div>
+          <div class="progress-bar-wrap" id="progressWrap1"><div class="progress-bar" id="progressBar1"></div></div>
+          <div class="msg" id="importMsg1"></div>
+        </div>
+        <div class="import-pane" id="paneFile">
+          <div class="upload-zone" id="uploadZone">
+            <input type="file" accept=".json" id="fileInput" onchange="handleFile(this)">
+            <div class="upload-icon">📁</div>
+            <div class="upload-label">Glisse ton fichier ici ou <span>clique pour choisir</span></div>
+            <div class="upload-filename" id="uploadFilename"></div>
+          </div>
+          <div class="import-actions">
+            <button class="btn-import" onclick="importerFichier()">⬆ Importer le fichier</button>
+            <span class="import-preview" id="previewFile"></span>
+          </div>
+          <div class="progress-bar-wrap" id="progressWrap2"><div class="progress-bar" id="progressBar2"></div></div>
+          <div class="msg" id="importMsg2"></div>
+        </div>
+      </div>
+
+      <!-- AJOUT PRODUIT -->
+      <div class="section-title"><span>Ajouter un produit</span></div>
+      <div class="add-form">
+        <div class="form-grid">
+          <div class="field"><label>Nom</label><input type="text" id="newNom" placeholder="Air Max 2026"></div>
+          <div class="field"><label>Emoji</label><input type="text" id="newEmoji" placeholder="👟"></div>
+          <div class="field"><label>Catégorie</label><select id="newCat"></select></div>
+        </div>
+        <div class="form-grid-2">
+          <div class="field"><label>Prix (€)</label><input type="number" id="newPrix" placeholder="29.99" step="0.01" min="0"></div>
+          <div class="field"><label>Badge (optionnel)</label><input type="text" id="newBadge" placeholder="NEW, PROMO..."></div>
+        </div>
+        <div class="field" style="margin-bottom:20px"><label>Description</label><input type="text" id="newDesc" placeholder="Description courte..."></div>
+        <button class="btn-add" onclick="ajouterProduit()">+ Ajouter le produit</button>
+        <div class="msg" id="addMsg"></div>
+      </div>
+
+      <!-- TABLE PRODUITS -->
+      <div class="section-title"><span>Gérer les produits</span></div>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Emoji</th><th>Nom</th><th>Catégorie</th><th>Prix</th><th>Badge</th><th>Statut</th><th>Actions</th></tr></thead>
+          <tbody id="produitsTable"><tr><td colspan="7" class="empty-table">Chargement...</td></tr></tbody>
+        </table>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- MODAL EDIT PRODUIT -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal">
+      <div class="modal-title">Modifier le produit</div>
+      <input type="hidden" id="editId">
+      <div class="form-grid" style="margin-bottom:16px">
+        <div class="field"><label>Nom</label><input type="text" id="editNom"></div>
+        <div class="field"><label>Emoji</label><input type="text" id="editEmoji"></div>
+        <div class="field"><label>Catégorie</label><select id="editCat"></select></div>
+      </div>
+      <div class="form-grid-2" style="margin-bottom:16px">
+        <div class="field"><label>Prix (€)</label><input type="number" id="editPrix" step="0.01" min="0"></div>
+        <div class="field"><label>Badge</label><input type="text" id="editBadge"></div>
+      </div>
+      <div class="field" style="margin-bottom:16px"><label>Description</label><input type="text" id="editDesc"></div>
+      <div class="field"><label>Statut</label><select id="editActif"><option value="1">✅ Actif</option><option value="0">❌ Inactif</option></select></div>
+      <div class="modal-btns">
+        <button class="btn-cancel" onclick="closeEdit()">Annuler</button>
+        <button class="btn-save" onclick="sauvegarderProduit()">Sauvegarder →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL EDIT CATEGORIE -->
+  <div class="modal-overlay" id="editCatModal">
+    <div class="modal purple-modal">
+      <div class="modal-title">Modifier la catégorie</div>
+      <input type="hidden" id="editCatId">
+      <div class="form-grid-3" style="margin-bottom:16px">
+        <div class="field"><label>Nom</label><input type="text" id="editCatNom"></div>
+        <div class="field"><label>Emoji</label><input type="text" id="editCatEmoji"></div>
+        <div class="field"><label>Ordre</label><input type="number" id="editCatOrdre" min="0"></div>
+      </div>
+      <div class="modal-btns">
+        <button class="btn-cancel" onclick="closeEditCat()">Annuler</button>
+        <button class="btn-save purple" onclick="sauvegarderCategorie()">Sauvegarder →</button>
+      </div>
+      <div class="msg" id="editCatMsg"></div>
+    </div>
+  </div>
+
+  <script>
+    const API = 'http://localhost:3000/api/admin';
+    const CAT_API = 'http://localhost:3000/api/categories';
+    let adminToken = localStorage.getItem('adminToken');
+    let fichierJSON = null;
+    let categories = [];
+
+    if (adminToken) showPanel();
+
+    async function loginAdmin() {
+      const email = document.getElementById('adminEmail').value;
+      const mot_de_passe = document.getElementById('adminPassword').value;
+      try {
+        const res = await fetch(`${API}/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, mot_de_passe }) });
+        const data = await res.json();
+        if (data.token) { localStorage.setItem('adminToken', data.token); adminToken = data.token; showPanel(); }
+        else showMsg('loginMsg', data.erreur || 'Erreur', 'error');
+      } catch { showMsg('loginMsg', 'Serveur inaccessible', 'error'); }
+    }
+
+    function showPanel() {
+      document.getElementById('loginPanel').style.display = 'none';
+      document.getElementById('adminPanel').style.display = 'block';
+      loadCategories();
+      loadProduits();
+    }
+
+    function logout() { localStorage.removeItem('adminToken'); location.reload(); }
+
+    // ─── CATEGORIES ───
+    async function loadCategories() {
+      try {
+        const res = await fetch(CAT_API);
+        categories = await res.json();
+        renderCatsGrid();
+        populateCatSelects();
+        document.getElementById('statCats').textContent = categories.length;
+      } catch { document.getElementById('catsGrid').innerHTML = '<p style="color:var(--rouge);font-size:12px">Erreur chargement</p>'; }
+    }
+
+    function renderCatsGrid() {
+      const grid = document.getElementById('catsGrid');
+      if (!categories.length) { grid.innerHTML = '<p style="color:var(--text-dim);font-family:\'DM Mono\',monospace;font-size:12px">Aucune catégorie</p>'; return; }
+      grid.innerHTML = categories.map(c => `
+        <div class="cat-card">
+          <div class="cat-card-left">
+            <div class="cat-card-emoji">${c.emoji}</div>
+            <div>
+              <div class="cat-card-nom">${c.nom}</div>
+              <div class="cat-card-ordre">ordre : ${c.ordre}</div>
+            </div>
+          </div>
+          <div class="td-actions">
+            <button class="btn-edit" onclick="openEditCat(${JSON.stringify(c).replace(/"/g, '&quot;')})">✏</button>
+            <button class="btn-delete" onclick="supprimerCategorie(${c.id}, '${c.nom}')">✕</button>
+          </div>
+        </div>`).join('');
+    }
+
+    function populateCatSelects() {
+      const opts = categories.map(c => `<option value="${c.nom}">${c.emoji} ${c.nom}</option>`).join('');
+      document.getElementById('newCat').innerHTML = opts;
+      document.getElementById('editCat').innerHTML = opts;
+    }
+
+    async function ajouterCategorie() {
+      const nom = document.getElementById('newCatNom').value.trim().toLowerCase();
+      const emoji = document.getElementById('newCatEmoji').value.trim();
+      const ordre = parseInt(document.getElementById('newCatOrdre').value) || 0;
+      if (!nom || !emoji) { showMsg('catMsg', 'Nom et emoji requis', 'error'); return; }
+      try {
+        const res = await fetch(CAT_API, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` }, body: JSON.stringify({ nom, emoji, ordre }) });
+        const data = await res.json();
+        if (res.ok) {
+          showMsg('catMsg', '✅ Catégorie ajoutée !', 'success');
+          ['newCatNom','newCatEmoji','newCatOrdre'].forEach(id => document.getElementById(id).value = '');
+          loadCategories();
+        } else showMsg('catMsg', data.erreur || 'Erreur', 'error');
+      } catch { showMsg('catMsg', 'Erreur serveur', 'error'); }
+    }
+
+    function openEditCat(c) {
+      document.getElementById('editCatId').value = c.id;
+      document.getElementById('editCatNom').value = c.nom;
+      document.getElementById('editCatEmoji').value = c.emoji;
+      document.getElementById('editCatOrdre').value = c.ordre;
+      document.getElementById('editCatModal').classList.add('open');
+    }
+
+    function closeEditCat() { document.getElementById('editCatModal').classList.remove('open'); }
+
+    async function sauvegarderCategorie() {
+      const id = document.getElementById('editCatId').value;
+      const nom = document.getElementById('editCatNom').value.trim().toLowerCase();
+      const emoji = document.getElementById('editCatEmoji').value.trim();
+      const ordre = parseInt(document.getElementById('editCatOrdre').value) || 0;
+      try {
+        const res = await fetch(`${CAT_API}/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` }, body: JSON.stringify({ nom, emoji, ordre }) });
+        const data = await res.json();
+        if (res.ok) { closeEditCat(); loadCategories(); }
+        else showMsg('editCatMsg', data.erreur || 'Erreur', 'error');
+      } catch { showMsg('editCatMsg', 'Erreur serveur', 'error'); }
+    }
+
+    async function supprimerCategorie(id, nom) {
+      if (!confirm(`Supprimer la catégorie "${nom}" ?\n\nImpossible si des produits l'utilisent.`)) return;
+      try {
+        const res = await fetch(`${CAT_API}/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${adminToken}` } });
+        const data = await res.json();
+        if (res.ok) loadCategories();
+        else alert(data.erreur);
+      } catch {}
+    }
+
+    // ─── IMPORT TABS ───
+    function switchTab(tab, btn) {
+      document.querySelectorAll('.import-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.import-pane').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(tab === 'paste' ? 'paneColler' : 'paneFile').classList.add('active');
+    }
+
+    function handleFile(input) {
+      const file = input.files[0]; if (!file) return;
+      fichierJSON = file;
+      document.getElementById('uploadFilename').textContent = `✓ ${file.name}`;
+      const reader = new FileReader();
+      reader.onload = (e) => { try { const d = JSON.parse(e.target.result); document.getElementById('previewFile').textContent = `${Array.isArray(d) ? d.length : 1} produit(s)`; } catch { document.getElementById('previewFile').textContent = '⚠ JSON invalide'; } };
+      reader.readAsText(file);
+    }
+
+    const zone = document.getElementById('uploadZone');
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault(); zone.classList.remove('drag');
+      const file = e.dataTransfer.files[0];
+      if (file && file.name.endsWith('.json')) { fichierJSON = file; document.getElementById('uploadFilename').textContent = `✓ ${file.name}`; const reader = new FileReader(); reader.onload = (ev) => { try { const d = JSON.parse(ev.target.result); document.getElementById('previewFile').textContent = `${Array.isArray(d) ? d.length : 1} produit(s)`; } catch { document.getElementById('previewFile').textContent = '⚠ JSON invalide'; } }; reader.readAsText(file); }
+    });
+
+    async function importerJSON() {
+      const raw = document.getElementById('jsonInput').value.trim();
+      if (!raw) { showMsg('importMsg1', 'Colle du JSON d\'abord', 'error'); return; }
+      let produits; try { produits = JSON.parse(raw); } catch { showMsg('importMsg1', '❌ JSON invalide', 'error'); return; }
+      if (!Array.isArray(produits)) produits = [produits];
+      await importerProduits(produits, 'importMsg1', 'progressWrap1', 'progressBar1');
+    }
+
+    async function importerFichier() {
+      if (!fichierJSON) { showMsg('importMsg2', 'Choisis un fichier JSON d\'abord', 'error'); return; }
+      const reader = new FileReader();
+      reader.onload = async (e) => { let produits; try { produits = JSON.parse(e.target.result); } catch { showMsg('importMsg2', '❌ JSON invalide', 'error'); return; } if (!Array.isArray(produits)) produits = [produits]; await importerProduits(produits, 'importMsg2', 'progressWrap2', 'progressBar2'); };
+      reader.readAsText(fichierJSON);
+    }
+
+    async function importerProduits(produits, msgId, wrapId, barId) {
+      const wrap = document.getElementById(wrapId); const bar = document.getElementById(barId);
+      wrap.style.display = 'block'; bar.style.width = '0%';
+      let ok = 0, err = 0;
+      for (let i = 0; i < produits.length; i++) {
+        const p = produits[i];
+        if (!p.nom || !p.emoji || !p.categorie || !p.prix) { err++; bar.style.width = `${Math.round(((i+1)/produits.length)*100)}%`; continue; }
+        try { const res = await fetch(`${API}/produits`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` }, body: JSON.stringify({ nom: p.nom, emoji: p.emoji, categorie: p.categorie, prix: parseFloat(p.prix), description: p.description || '', badge: p.badge || null }) }); if (res.ok) ok++; else err++; } catch { err++; }
+        bar.style.width = `${Math.round(((i+1)/produits.length)*100)}%`;
+      }
+      showMsg(msgId, `✅ ${ok} importé(s)${err > 0 ? ` — ⚠ ${err} ignoré(s)` : ''}`, err === 0 ? 'success' : ok > 0 ? 'info' : 'error');
+      loadProduits();
+      setTimeout(() => { wrap.style.display = 'none'; bar.style.width = '0%'; }, 3000);
+    }
+
+    // ─── PRODUITS ───
+    async function loadProduits() {
+      try { const res = await fetch(`${API}/produits`); const produits = await res.json(); renderTable(produits); updateStats(produits); }
+      catch { document.getElementById('produitsTable').innerHTML = '<tr><td colspan="7" class="empty-table">Erreur</td></tr>'; }
+    }
+
+    function updateStats(produits) {
+      document.getElementById('statTotal').textContent = produits.length;
+      document.getElementById('statActifs').textContent = produits.filter(p => p.actif).length;
+      const moy = produits.length ? (produits.reduce((s,p) => s+p.prix, 0)/produits.length).toFixed(2) : '0';
+      document.getElementById('statPrix').textContent = moy + '€';
+    }
+
+    function renderTable(produits) {
+      const tbody = document.getElementById('produitsTable');
+      if (!produits.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty-table">Aucun produit</td></tr>'; return; }
+      tbody.innerHTML = produits.map(p => `
+        <tr>
+          <td class="td-emoji">${p.emoji}</td>
+          <td><strong>${p.nom}</strong></td>
+          <td>${(() => { const c = categories.find(c => c.nom === p.categorie); return c ? `${c.emoji} ${c.nom}` : p.categorie; })()}</td>
+          <td style="font-family:'DM Mono',monospace">${p.prix.toFixed(2)}€</td>
+          <td>${p.badge ? `<span class="badge-pill">${p.badge}</span>` : '<span style="color:var(--text-dim)">—</span>'}</td>
+          <td><span class="actif-dot ${p.actif ? 'on' : 'off'}"></span> ${p.actif ? 'Actif' : 'Inactif'}</td>
+          <td><div class="td-actions">
+            <button class="btn-edit" onclick="openEdit(${JSON.stringify(p).replace(/"/g, '&quot;')})">Modifier</button>
+            <button class="btn-delete" onclick="supprimerProduit(${p.id}, '${p.nom}')">Supprimer</button>
+          </div></td>
+        </tr>`).join('');
+    }
+
+    async function ajouterProduit() {
+      const nom = document.getElementById('newNom').value;
+      const emoji = document.getElementById('newEmoji').value;
+      const categorie = document.getElementById('newCat').value;
+      const prix = parseFloat(document.getElementById('newPrix').value);
+      const description = document.getElementById('newDesc').value;
+      const badge = document.getElementById('newBadge').value;
+      if (!nom || !emoji || !prix) { showMsg('addMsg', 'Nom, emoji et prix requis', 'error'); return; }
+      try {
+        const res = await fetch(`${API}/produits`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` }, body: JSON.stringify({ nom, emoji, categorie, prix, description, badge: badge || null }) });
+        const data = await res.json();
+        if (res.ok) { showMsg('addMsg', '✅ Produit ajouté !', 'success'); ['newNom','newEmoji','newPrix','newDesc','newBadge'].forEach(id => document.getElementById(id).value = ''); loadProduits(); }
+        else showMsg('addMsg', data.erreur || 'Erreur', 'error');
+      } catch { showMsg('addMsg', 'Erreur serveur', 'error'); }
+    }
+
+    function openEdit(p) {
+      document.getElementById('editId').value = p.id;
+      document.getElementById('editNom').value = p.nom;
+      document.getElementById('editEmoji').value = p.emoji;
+      document.getElementById('editCat').value = p.categorie;
+      document.getElementById('editPrix').value = p.prix;
+      document.getElementById('editDesc').value = p.description || '';
+      document.getElementById('editBadge').value = p.badge || '';
+      document.getElementById('editActif').value = p.actif;
+      document.getElementById('editModal').classList.add('open');
+    }
+
+    function closeEdit() { document.getElementById('editModal').classList.remove('open'); }
+
+    async function sauvegarderProduit() {
+      const id = document.getElementById('editId').value;
+      const body = { nom: document.getElementById('editNom').value, emoji: document.getElementById('editEmoji').value, categorie: document.getElementById('editCat').value, prix: parseFloat(document.getElementById('editPrix').value), description: document.getElementById('editDesc').value, badge: document.getElementById('editBadge').value || null, actif: parseInt(document.getElementById('editActif').value) };
+      try { const res = await fetch(`${API}/produits/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` }, body: JSON.stringify(body) }); if (res.ok) { closeEdit(); loadProduits(); } } catch {}
+    }
+
+    async function supprimerProduit(id, nom) {
+      if (!confirm(`Supprimer "${nom}" ?`)) return;
+      try { await fetch(`${API}/produits/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${adminToken}` } }); loadProduits(); } catch {}
+    }
+
+    function showMsg(id, text, type) {
+      const el = document.getElementById(id);
+      el.textContent = text; el.className = `msg ${type}`;
+      setTimeout(() => el.className = 'msg', 4000);
+    }
+  </script>
+</body>
+</html>

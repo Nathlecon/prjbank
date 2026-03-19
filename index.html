@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NathProject</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Syne:wght@400;500;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #000000;
+      --glass: rgba(255,255,255,0.055);
+      --glass-b: rgba(255,255,255,0.09);
+      --gold: #ebe41f;
+      --red: #e84b6b;
+      --purple: #9b6ef3;
+      --text: #f0efe8;
+      --text2: #7a7985;
+      --r: 999px;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ── LOADER ── */
+    #loader {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 52px;
+      transition: opacity 0.7s ease, visibility 0.7s ease;
+    }
+    #loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+    .loader-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.22em;
+      color: var(--text2);
+      text-transform: uppercase;
+      animation: blink 1.8s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:0.3} 50%{opacity:1} }
+
+    /* ── SKIP BUTTON ── */
+    #skip-btn {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      z-index: 1000;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      color: var(--text2);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 10px 20px;
+      border-radius: var(--r);
+      cursor: pointer;
+      transition: color 0.2s, background 0.2s, opacity 0.4s;
+      animation: fadeIn 1.2s ease both;
+    }
+    #skip-btn:hover { color: var(--text); background: rgba(255,255,255,0.1); }
+    #skip-btn.hidden { opacity: 0; pointer-events: none; }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+    /* ── MacBook ── */
+    .macbook {
+      width: 150px; height: 96px;
+      position: relative;
+      perspective: 500px;
+      margin-top: 60px;
+    }
+    .shadow {
+      position: absolute; width: 60px; height: 0;
+      left: 40px; top: 160px;
+      transform: rotateX(80deg);
+      box-shadow: 0 0 60px 40px rgba(0,0,0,0.3);
+      animation: mac-shadow 7s ease infinite;
+    }
+    .inner {
+      z-index: 20; position: absolute;
+      width: 150px; height: 96px; left: 0; top: 0;
+      transform-style: preserve-3d;
+      transform: rotateX(-20deg);
+      animation: mac-rotate 7s ease infinite;
+    }
+    .screen {
+      width: 150px; height: 96px;
+      position: absolute; left: 0; bottom: 0;
+      border-radius: 7px; background: #ddd;
+      transform-style: preserve-3d; transform-origin: 50% 93px;
+      animation: mac-lid-screen 7s ease infinite;
+      background-image: linear-gradient(45deg, rgba(0,0,0,0.34) 0%, rgba(0,0,0,0) 100%);
+      background-position: left bottom; background-size: 300px 300px;
+      box-shadow: inset 0 3px 7px rgba(255,255,255,0.5);
+    }
+    .screen .face-one {
+      width: 150px; height: 96px;
+      position: absolute; left: 0; bottom: 0;
+      border-radius: 7px; background: #d3d3d3;
+      transform: translateZ(2px);
+      background-image: linear-gradient(45deg, rgba(0,0,0,0.24) 0%, rgba(0,0,0,0) 100%);
+    }
+    .screen .face-one .camera {
+      width: 3px; height: 3px; border-radius: 100%;
+      background: #000; position: absolute;
+      left: 50%; top: 4px; margin-left: -1.5px;
+    }
+    .screen .face-one .display {
+      width: 130px; height: 74px; margin: 10px;
+      background-color: #0a0a0d; border-radius: 1px;
+      position: relative; box-shadow: inset 0 0 2px #000;
+      overflow: hidden; display: flex; align-items: center; justify-content: center;
+    }
+    .display-inner {
+      font-family: 'Instrument Serif', serif;
+      font-style: italic; font-size: 8px;
+      color: #e8b84b; letter-spacing: 0.04em;
+      position: relative; z-index: 2;
+    }
+    .screen .face-one .display .shade {
+      position: absolute; left: 0; top: 0;
+      width: 130px; height: 74px;
+      background: linear-gradient(-135deg, transparent 0%, rgba(255,255,255,0.1) 47%, transparent 48%);
+      animation: mac-screen-shade 7s ease infinite;
+      background-size: 300px 200px; background-position: 0 0;
+    }
+    .screen .face-one span {
+      position: absolute; top: 85px; left: 57px;
+      font-size: 6px; color: #666;
+    }
+    .macbody {
+      width: 150px; height: 96px;
+      position: absolute; left: 0; bottom: 0;
+      border-radius: 7px; background: #cbcbcb;
+      transform-style: preserve-3d; transform-origin: 50% bottom;
+      transform: rotateX(-90deg);
+      animation: mac-lid-macbody 7s ease infinite;
+      background-image: linear-gradient(45deg, rgba(0,0,0,0.24) 0%, rgba(0,0,0,0) 100%);
+    }
+    .macbody .face-one {
+      width: 150px; height: 96px;
+      position: absolute; left: 0; bottom: 0;
+      border-radius: 7px; transform-style: preserve-3d;
+      background: #dfdfdf; transform: translateZ(-2px);
+      animation: mac-lid-keyboard-area 7s ease infinite;
+      background-image: linear-gradient(30deg, rgba(0,0,0,0.24) 0%, rgba(0,0,0,0) 100%);
+    }
+    .macbody .touchpad {
+      width: 40px; height: 31px; position: absolute;
+      left: 50%; top: 50%; border-radius: 4px;
+      margin: -44px 0 0 -18px; background: #cdcdcd;
+      background-image: linear-gradient(30deg, rgba(0,0,0,0.24) 0%, rgba(0,0,0,0) 100%);
+      box-shadow: inset 0 0 3px #888;
+    }
+    .macbody .keyboard {
+      width: 130px; height: 45px;
+      position: absolute; left: 7px; top: 41px;
+      border-radius: 4px; transform-style: preserve-3d;
+      background: #cdcdcd;
+      background-image: linear-gradient(30deg, rgba(0,0,0,0.24) 0%, rgba(0,0,0,0) 100%);
+      box-shadow: inset 0 0 3px #777; padding: 0 0 0 2px;
+    }
+    .keyboard .key {
+      width: 6px; height: 6px; background: #444;
+      float: left; margin: 1px; transform: translateZ(-2px);
+      border-radius: 2px; box-shadow: 0 -2px 0 #222;
+      animation: mac-keys 7s ease infinite;
+    }
+    .key.space { width: 45px; }
+    .key.f { height: 3px; }
+    .macbody .pad {
+      width: 5px; height: 5px; background: #333;
+      border-radius: 100%; position: absolute;
+    }
+    .pad.one { left: 20px; top: 20px; }
+    .pad.two { right: 20px; top: 20px; }
+    .pad.three { right: 20px; bottom: 20px; }
+    .pad.four { left: 20px; bottom: 20px; }
+
+    @keyframes mac-rotate {
+      0%   { transform: rotateX(-20deg) rotateY(0deg) rotateZ(0deg); }
+      5%   { transform: rotateX(-20deg) rotateY(-20deg) rotateZ(0deg); }
+      20%  { transform: rotateX(30deg) rotateY(200deg) rotateZ(0deg); }
+      25%  { transform: rotateX(-60deg) rotateY(150deg) rotateZ(0deg); }
+      60%  { transform: rotateX(-20deg) rotateY(130deg) rotateZ(0deg); }
+      65%  { transform: rotateX(-20deg) rotateY(120deg) rotateZ(0deg); }
+      80%  { transform: rotateX(-20deg) rotateY(375deg) rotateZ(0deg); }
+      85%  { transform: rotateX(-20deg) rotateY(357deg) rotateZ(0deg); }
+      87%  { transform: rotateX(-20deg) rotateY(360deg) rotateZ(0deg); }
+      100% { transform: rotateX(-20deg) rotateY(360deg) rotateZ(0deg); }
+    }
+    @keyframes mac-lid-screen {
+      0%   { transform: rotateX(0deg); background-position: left bottom; }
+      5%   { transform: rotateX(50deg); background-position: left bottom; }
+      20%  { transform: rotateX(-90deg); background-position: -150px top; }
+      25%  { transform: rotateX(15deg); background-position: left bottom; }
+      30%  { transform: rotateX(-5deg); background-position: right top; }
+      38%  { transform: rotateX(5deg); background-position: right top; }
+      48%  { transform: rotateX(0deg); background-position: right top; }
+      90%  { transform: rotateX(0deg); background-position: right top; }
+      100% { transform: rotateX(0deg); background-position: right center; }
+    }
+    @keyframes mac-lid-macbody { 0%,50%,100% { transform: rotateX(-90deg); } }
+    @keyframes mac-lid-keyboard-area { 0%,100%{background-color:#dfdfdf} 50%{background-color:#bbb} }
+    @keyframes mac-screen-shade {
+      0%{background-position:-20px 0} 5%{background-position:-40px 0}
+      20%{background-position:200px 0} 50%{background-position:-200px 0}
+      80%{background-position:0 0} 85%{background-position:-30px 0}
+      90%{background-position:-20px 0} 100%{background-position:-20px 0}
+    }
+    @keyframes mac-keys {
+      0%,80%,100%{box-shadow:0 -2px 0 #222}
+      5%{box-shadow:1px -1px 0 #222}
+      20%,25%,60%{box-shadow:-1px 1px 0 #222}
+    }
+    @keyframes mac-shadow {
+      0%,100%{transform:rotateX(80deg) rotateY(0deg) rotateZ(0deg);box-shadow:0 0 60px 40px rgba(0,0,0,0.3)}
+      5%{transform:rotateX(80deg) rotateY(10deg) rotateZ(0deg);box-shadow:0 0 60px 40px rgba(0,0,0,0.3)}
+      20%{transform:rotateX(30deg) rotateY(-20deg) rotateZ(-20deg);box-shadow:0 0 50px 30px rgba(0,0,0,0.3)}
+      25%{transform:rotateX(80deg) rotateY(-20deg) rotateZ(50deg);box-shadow:0 0 35px 15px rgba(0,0,0,0.1)}
+      60%{transform:rotateX(80deg) rotateY(0deg) rotateZ(-50deg) translateX(30px);box-shadow:0 0 60px 40px rgba(0,0,0,0.3)}
+    }
+
+    /* ── AMBIENT ── */
+    .amb { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .amb span {
+      position: absolute; border-radius: 50%;
+      filter: blur(130px); opacity: 0.17;
+      animation: drift 20s ease-in-out infinite;
+    }
+    .amb span:nth-child(1){width:600px;height:600px;background:#e8b84b;top:-200px;left:-100px}
+    .amb span:nth-child(2){width:500px;height:500px;background:#e84b6b;bottom:-100px;right:-100px;animation-delay:-8s}
+    .amb span:nth-child(3){width:380px;height:380px;background:#9b6ef3;top:40%;left:42%;animation-delay:-14s}
+    @keyframes drift {
+      0%,100%{transform:translate(0,0)} 33%{transform:translate(40px,-50px)} 66%{transform:translate(-30px,40px)}
+    }
+
+    /* ── APP ── */
+    #app { opacity: 0; transition: opacity 0.8s ease 0.2s; }
+    #app.visible { opacity: 1; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+      z-index: 100; width: calc(100% - 48px); max-width: 860px;
+      padding: 10px 10px 10px 22px;
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(9,9,12,0.72);
+      backdrop-filter: blur(30px) saturate(180%);
+      -webkit-backdrop-filter: blur(30px) saturate(180%);
+      border: 1px solid var(--glass-b); border-radius: var(--r);
+    }
+    .nav-logo {
+      font-family: 'Instrument Serif', serif;
+      font-style: italic; font-size: 1.2rem; color: var(--text);
+    }
+    .nav-logo b { color: var(--gold); font-style: normal; }
+    .nav-right { display: flex; gap: 8px; }
+    .nav-link {
+      font-family: 'DM Mono', monospace; font-size: 0.64rem;
+      letter-spacing: 0.04em; color: var(--text2);
+      text-decoration: none; padding: 8px 16px; border-radius: var(--r);
+      transition: color 0.2s, background 0.2s;
+    }
+    .nav-link:hover { color: var(--text); background: var(--glass); }
+    .nav-cta {
+      font-family: 'DM Mono', monospace; font-size: 0.64rem;
+      font-weight: 700; letter-spacing: 0.04em;
+      color: #09090c; background: var(--gold);
+      text-decoration: none; padding: 9px 20px; border-radius: var(--r);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .nav-cta:hover { transform: scale(1.04); box-shadow: 0 6px 24px rgba(232,184,75,0.35); }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative; z-index: 2;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-family: 'DM Mono', monospace; font-size: 0.58rem;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--gold); background: rgba(232,184,75,0.08);
+      border: 1px solid rgba(232,184,75,0.2);
+      padding: 6px 16px; border-radius: var(--r);
+      margin-bottom: 2.2rem;
+      animation: fadeUp 0.5s ease both;
+    }
+    .hero-badge::before { content: '●'; font-size: 0.36rem; animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    h1 {
+      font-family: 'Instrument Serif', serif;
+      font-size: clamp(3rem, 8vw, 7.5rem);
+      font-weight: 400; line-height: 0.95;
+      letter-spacing: -0.04em;
+      margin-bottom: 1.8rem;
+      animation: fadeUp 0.5s 0.08s ease both;
+    }
+    h1 em { color: var(--gold); font-style: italic; }
+    h1 em.red { color: var(--red); }
+    h1 em.purple { color: var(--purple); }
+
+    .hero-sub {
+      font-family: 'Syne', sans-serif; font-size: 1.05rem;
+      font-weight: 400; color: var(--text2);
+      max-width: 460px; line-height: 1.7;
+      margin-bottom: 2.6rem;
+      animation: fadeUp 0.5s 0.16s ease both;
+    }
+
+    .hero-btns {
+      display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+      animation: fadeUp 0.5s 0.24s ease both;
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: 'DM Mono', monospace; font-size: 0.72rem;
+      letter-spacing: 0.04em; text-decoration: none;
+      padding: 15px 34px; border-radius: var(--r);
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .btn-gold { background: var(--gold); color: #09090c; font-weight: 700; }
+    .btn-gold:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 14px 40px rgba(232,184,75,0.38); }
+    .btn-ghost {
+      background: var(--glass); color: var(--text);
+      border: 1px solid var(--glass-b); backdrop-filter: blur(20px);
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,0.09); transform: translateY(-3px); }
+
+    .hero-stats {
+      display: flex; gap: 3rem;
+      margin-top: 4.5rem; padding-top: 2.8rem;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      animation: fadeUp 0.5s 0.32s ease both;
+    }
+    .sv {
+      font-family: 'Instrument Serif', serif;
+      font-size: 2.8rem; font-style: italic; line-height: 1;
+    }
+    .sv sup {
+      font-family: 'DM Mono', monospace; font-size: 0.58rem;
+      font-style: normal; color: var(--text2);
+      margin-left: 4px; vertical-align: super;
+    }
+    .sl {
+      font-family: 'DM Mono', monospace; font-size: 0.52rem;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--text2); margin-top: 5px;
+    }
+
+    /* ── APP CARDS ── */
+    .apps {
+      position: relative; z-index: 2;
+      max-width: 900px; margin: 0 auto;
+      padding: 60px 24px 80px;
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+    }
+    .app-card {
+      border-radius: 42px; padding: 48px 40px;
+      background: var(--glass); border: 1px solid var(--glass-b);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      position: relative; overflow: hidden;
+      text-decoration: none; display: block;
+      opacity: 0; transform: translateY(28px);
+      transition: opacity 0.6s ease, transform 0.6s ease, border-color 0.4s, box-shadow 0.4s, background 0.4s;
+    }
+    .app-card.on { opacity: 1; transform: translateY(0); }
+    .app-card.d1 { transition-delay: 0.1s; }
+    .app-card.d2 { transition-delay: 0.22s; }
+    .app-card.d3 { transition-delay: 0.34s; }
+    .app-card::before {
+      content: ''; position: absolute; inset: 0; border-radius: 42px;
+      background: radial-gradient(circle at 30% 30%, var(--ac, rgba(232,184,75,0.1)) 0%, transparent 65%);
+      opacity: 0; transition: opacity 0.4s; pointer-events: none;
+    }
+    .app-card:hover::before { opacity: 1; }
+    .app-card:hover {
+      transform: translateY(-8px) scale(1.015) !important;
+      border-color: rgba(255,255,255,0.16);
+      box-shadow: 0 40px 80px rgba(0,0,0,0.4);
+      background: rgba(255,255,255,0.07);
+    }
+    .bank { --ac: rgba(232,184,75,0.13); }
+    .store { --ac: rgba(232,75,107,0.13); }
+    .notes { --ac: rgba(155,110,243,0.13); }
+
+    .app-icon { font-size: 2.6rem; margin-bottom: 1.5rem; display: block; line-height: 1; }
+    .app-name {
+      font-family: 'Instrument Serif', serif;
+      font-size: 2.3rem; font-style: italic; line-height: 1;
+      margin-bottom: 10px; color: var(--text);
+    }
+    .app-name b { color: var(--gold); font-style: normal; }
+    .store .app-name b { color: var(--red); }
+    .notes .app-name b { color: var(--purple); }
+    .app-desc {
+      font-family: 'Syne', sans-serif; font-size: 0.88rem;
+      color: var(--text2); line-height: 1.65; margin-bottom: 2rem;
+    }
+    .app-arrow {
+      font-family: 'DM Mono', monospace; font-size: 0.64rem;
+      letter-spacing: 0.08em; color: var(--gold);
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: gap 0.2s;
+    }
+    .store .app-arrow { color: var(--red); }
+    .notes .app-arrow { color: var(--purple); }
+    .app-card:hover .app-arrow { gap: 12px; }
+
+    /* ── SECTION LABEL ── */
+    .section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.56rem; letter-spacing: 0.22em;
+      text-transform: uppercase; color: var(--text2);
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 3rem;
+    }
+    .section-label::after {
+      content: ''; flex: 1; height: 1px;
+      background: rgba(255,255,255,0.06);
+    }
+
+    /* ── STATS ANIMÉES ── */
+    .stats-section {
+      position: relative; z-index: 2;
+      max-width: 900px; margin: 0 auto;
+      padding: 0 24px 100px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+    .stat-card {
+      background: var(--glass);
+      border: 1px solid var(--glass-b);
+      border-radius: 28px;
+      padding: 36px 28px;
+      backdrop-filter: blur(20px);
+      position: relative;
+      overflow: hidden;
+      opacity: 0; transform: translateY(20px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .stat-card.on { opacity: 1; transform: translateY(0); }
+    .stat-card::before {
+      content: '';
+      position: absolute; inset: 0; border-radius: 28px;
+      background: radial-gradient(circle at 50% 0%, var(--sc, rgba(232,184,75,0.08)) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .stat-card:nth-child(1) { --sc: rgba(232,184,75,0.1); transition-delay: 0.05s; }
+    .stat-card:nth-child(2) { --sc: rgba(232,75,107,0.1); transition-delay: 0.12s; }
+    .stat-card:nth-child(3) { --sc: rgba(155,110,243,0.1); transition-delay: 0.19s; }
+    .stat-card:nth-child(4) { --sc: rgba(75,184,232,0.1); transition-delay: 0.26s; }
+
+    .stat-icon {
+      font-size: 1.1rem; margin-bottom: 1rem; opacity: 0.7;
+    }
+    .stat-num {
+      font-family: 'Instrument Serif', serif;
+      font-size: 3.4rem; font-style: italic;
+      line-height: 1; letter-spacing: -0.03em;
+      color: var(--text);
+    }
+    .stat-num.gold { color: var(--gold); }
+    .stat-num.red  { color: var(--red); }
+    .stat-num.purple { color: var(--purple); }
+    .stat-num.blue { color: #4bb8e8; }
+    .stat-suffix {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem; color: var(--text2);
+      margin-left: 3px; vertical-align: super;
+    }
+    .stat-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.52rem; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--text2);
+      margin-top: 8px;
+    }
+    .stat-sub {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.75rem; color: rgba(122,121,133,0.6);
+      margin-top: 4px;
+    }
+
+    /* ── LANGUAGES BARS ── */
+    .langs-section {
+      position: relative; z-index: 2;
+      max-width: 900px; margin: 0 auto;
+      padding: 0 24px 100px;
+    }
+    .langs-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .lang-card {
+      background: var(--glass);
+      border: 1px solid var(--glass-b);
+      border-radius: 28px;
+      padding: 32px;
+      backdrop-filter: blur(20px);
+      opacity: 0; transform: translateY(20px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .lang-card.on { opacity: 1; transform: translateY(0); }
+    .lang-card:nth-child(1) { transition-delay: 0.05s; }
+    .lang-card:nth-child(2) { transition-delay: 0.12s; }
+    
+    .lang-header {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 20px;
+    }
+    .lang-icon {
+      font-size: 1.4rem;
+    }
+    .lang-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.3rem; font-style: italic;
+      color: var(--text);
+    }
+    .lang-bars {
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .lang-bar-row {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .lang-name {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.58rem; letter-spacing: 0.08em;
+      color: var(--text2); width: 80px;
+      text-transform: uppercase;
+    }
+    .lang-bar {
+      flex: 1; height: 8px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 4px; overflow: hidden;
+    }
+    .lang-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      width: 0;
+      transition: width 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .lang-bar-fill.html { background: linear-gradient(90deg, #e84b6b, #ff6b8a); }
+    .lang-bar-fill.js { background: linear-gradient(90deg, #f7df1e, #ffeb3b); }
+    .lang-bar-fill.css { background: linear-gradient(90deg, #264de4, #4a7cff); }
+    .lang-bar-fill.json { background: linear-gradient(90deg, #9b6ef3, #c4a4ff); }
+    .lang-bar-fill.md { background: linear-gradient(90deg, #083fa1, #2d6cdb); }
+    .lang-bar-fill[data-lang] { background: var(--lang-color, #888); }
+    .lang-pct {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.58rem; color: var(--text2);
+      width: 45px; text-align: right;
+    }
+    .lang-lines {
+      display: block;
+      font-size: 0.45rem;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+    .lang-detail {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.72rem; color: var(--text2);
+      margin-top: 16px; opacity: 0.7;
+    }
+
+    /* ── TIMELINE ── */
+    .timeline-section {
+      position: relative; z-index: 2;
+      max-width: 900px; margin: 0 auto;
+      padding: 0 24px 120px;
+    }
+    .timeline-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .timeline-refresh {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.52rem; letter-spacing: 0.08em;
+      color: var(--text2);
+      background: var(--glass);
+      border: 1px solid var(--glass-b);
+      padding: 8px 16px; border-radius: var(--r);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .timeline-refresh:hover {
+      color: var(--text);
+      background: rgba(255,255,255,0.08);
+    }
+    .timeline-refresh.spinning svg {
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+    .timeline {
+      position: relative;
+      padding-left: 28px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute; left: 0; top: 8px; bottom: 8px;
+      width: 1px;
+      background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.12) 10%, rgba(255,255,255,0.12) 90%, transparent);
+    }
+    .tl-github {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.5rem; letter-spacing: 0.06em;
+      color: var(--text2); opacity: 0.5;
+      margin-bottom: 20px; display: none;
+    }
+    .tl-github.visible { display: block; }
+    .tl-entry {
+      position: relative;
+      padding: 0 0 48px 36px;
+      opacity: 0; transform: translateX(-12px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .tl-entry.on { opacity: 1; transform: translateX(0); }
+    .tl-entry::before {
+      content: '';
+      position: absolute; left: -4px; top: 8px;
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--dot-color, var(--gold));
+      box-shadow: 0 0 12px var(--dot-color, var(--gold));
+    }
+    .tl-entry:last-child { padding-bottom: 0; }
+
+    .tl-date {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.54rem; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--text2);
+      margin-bottom: 8px;
+    }
+    .tl-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.5rem; font-style: italic;
+      line-height: 1.1; margin-bottom: 8px;
+      color: var(--text);
+    }
+    .tl-title b { font-style: normal; color: var(--dot-color, var(--gold)); }
+    .tl-desc {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.88rem; color: var(--text2);
+      line-height: 1.7; max-width: 560px;
+    }
+    .tl-tags {
+      display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px;
+    }
+    .tl-tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.52rem; letter-spacing: 0.08em;
+      color: var(--dot-color, var(--gold));
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 4px 12px; border-radius: var(--r);
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative; z-index: 2;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      padding: 26px 48px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    footer p, footer span {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.58rem; letter-spacing: 0.08em; color: var(--text2);
+    }
+    footer b { color: var(--gold); font-weight: 400; }
+
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
+
+    @media (max-width: 1100px) {
+      .apps { grid-template-columns: 1fr 1fr; }
+      .app-card.d3 { grid-column: span 2; max-width: 50%; margin: 0 auto; width: 100%; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .langs-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      nav { width: calc(100% - 20px); top: 8px; }
+      .nav-link { display: none; }
+      h1 { font-size: clamp(3rem, 14vw, 5rem); }
+      .apps { grid-template-columns: 1fr; padding: 40px 16px 80px; }
+      .app-card.d3 { grid-column: auto; max-width: 100%; }
+      .hero-stats { gap: 1.8rem; flex-wrap: wrap; justify-content: center; }
+      footer { flex-direction: column; gap: 8px; text-align: center; padding: 20px; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .langs-grid { grid-template-columns: 1fr; }
+      #skip-btn { bottom: 16px; right: 16px; }
+    }
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .langs-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOADER -->
+  <div id="loader">
+    <div class="macbook">
+      <div class="inner">
+        <div class="screen">
+          <div class="face-one">
+            <div class="camera"></div>
+            <div class="display">
+              <div class="shade"></div>
+              <div class="display-inner">NathProject</div>
+            </div>
+            <span>MacBook Air</span>
+          </div>
+        </div>
+        <div class="macbody">
+          <div class="face-one">
+            <div class="touchpad"></div>
+            <div class="keyboard">
+              <div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div>
+              <div class="key"></div><div class="key space"></div><div class="key"></div><div class="key"></div>
+              <div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div>
+              <div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div>
+              <div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div>
+              <div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div>
+              <div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div>
+              <div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div>
+              <div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div>
+              <div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div>
+              <div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div>
+              <div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div>
+              <div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div>
+              <div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div>
+              <div class="key"></div><div class="key"></div>
+              <div class="key f"></div><div class="key f"></div><div class="key f"></div><div class="key f"></div>
+              <div class="key f"></div><div class="key f"></div><div class="key f"></div><div class="key f"></div>
+              <div class="key f"></div><div class="key f"></div><div class="key f"></div><div class="key f"></div>
+              <div class="key f"></div><div class="key f"></div><div class="key f"></div><div class="key f"></div>
+            </div>
+          </div>
+          <div class="pad one"></div><div class="pad two"></div>
+          <div class="pad three"></div><div class="pad four"></div>
+        </div>
+      </div>
+      <div class="shadow"></div>
+    </div>
+    <p class="loader-label">Chargement…</p>
+  </div>
+
+  <!-- SKIP BUTTON -->
+  <button id="skip-btn" onclick="skipLoader()">Passer →</button>
+
+  <!-- AMBIENT -->
+  <div class="amb"><span></span><span></span><span></span></div>
+
+  <!-- APP -->
+  <div id="app">
+
+    <nav>
+      <div class="nav-logo">Nath<b>Project</b></div>
+      <div class="nav-right">
+        <a href="banque-frontend/index.html" class="nav-link">NathBank</a>
+        <a href="nathnotes/index.html" class="nav-link">NathNotes</a>
+        <a href="nathstore/index.html" class="nav-cta">NathStore →</a>
+      </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-badge">v2026 · Bac Pro CIEL · KernelAndCo</div>
+      <h1>Nath<em>Bank</em><br>Nath<em class="red">Store</em><br>Nath<em class="purple">Notes</em></h1>
+      <p class="hero-sub">Un écosystème full-stack fait maison. Banque, boutique et notes, tout connecté, zéro framework.</p>
+      <div class="hero-btns">
+        <a href="nathstore/index.html" class="btn btn-gold">Ouvrir NathStore →</a>
+        <a href="banque-frontend/index.html" class="btn btn-ghost">NathBank</a>
+      </div>
+      <div class="hero-stats">
+        <div><div class="sv">8<sup>tables</sup></div><div class="sl">SQLite</div></div>
+        <div><div class="sv">3<sup>apps</sup></div><div class="sl">Frontend</div></div>
+        <div><div class="sv"><em>JWT</em></div><div class="sl">Auth</div></div>
+      </div>
+    </section>
+
+    <!-- APP CARDS -->
+    <div class="apps">
+      <a href="banque-frontend/index.html" class="app-card bank d1">
+        <span class="app-icon">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="6" y="14" width="36" height="24" rx="3" stroke="#e8b84b" stroke-width="2"/>
+            <path d="M6 20H42" stroke="#e8b84b" stroke-width="2"/>
+            <circle cx="24" cy="29" r="4" stroke="#e8b84b" stroke-width="2"/>
+            <path d="M18 29H30" stroke="#e8b84b" stroke-width="2"/>
+            <rect x="14" y="8" width="20" height="6" rx="2" fill="#e8b84b"/>
+          </svg>
+        </span>
+        <div class="app-name">Nath<b>Bank</b></div>
+        <p class="app-desc">Ton compte bancaire en ligne. Consulte ton solde, fais des virements, et paye directement sur NathStore.</p>
+        <span class="app-arrow">Ouvrir NathBank →</span>
+      </a>
+      <a href="nathstore/index.html" class="app-card store d2">
+        <span class="app-icon">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 14H40L38 40H10L8 14Z" stroke="#e84b6b" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M8 14L24 6L40 14" stroke="#e84b6b" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M16 22H32" stroke="#e84b6b" stroke-width="2" stroke-linecap="round"/>
+            <path d="M20 28H28" stroke="#e84b6b" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="24" cy="34" r="2" fill="#e84b6b"/>
+          </svg>
+        </span>
+        <div class="app-name">Nath<b>Store</b></div>
+        <p class="app-desc">La boutique connectée à NathBank. Parcours le catalogue, ajoute au panier, et paye avec ton solde.</p>
+        <span class="app-arrow">Ouvrir NathStore →</span>
+      </a>
+      <a href="nathnotes/index.html" class="app-card notes d3">
+        <span class="app-icon">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="8" y="6" width="32" height="36" rx="3" stroke="#9b6ef3" stroke-width="2"/>
+            <path d="M14 16H34" stroke="#9b6ef3" stroke-width="2" stroke-linecap="round"/>
+            <path d="M14 24H28" stroke="#9b6ef3" stroke-width="2" stroke-linecap="round"/>
+            <path d="M14 32H24" stroke="#9b6ef3" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <div class="app-name">Nath<b>Notes</b></div>
+        <p class="app-desc">Appli de notes style Apple Notes. Trois panneaux, dark/light mode, folders et recherche.</p>
+        <span class="app-arrow">Ouvrir NathNotes →</span>
+      </a>
+    </div>
+
+    <!-- STATS SECTION -->
+    <div class="stats-section">
+      <div class="section-label">Chiffres du projet</div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">⚡</div>
+          <div class="stat-num gold" data-target="222" data-suffix="">0</div>
+          <div class="stat-suffix">produits</div>
+          <div class="stat-label">NathStore</div>
+          <div class="stat-sub">Catalogue Hitman 2</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📝</div>
+          <div class="stat-num red" data-target="0" data-suffix="" id="stat-lines">0</div>
+          <div class="stat-suffix">COMMITS AU TOTAL</div>
+          <div class="stat-label">Lignes de code</div>
+          <div class="stat-sub">Compilées automatiquement</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🔐</div>
+          <div class="stat-num purple" data-target="2" data-suffix="">0</div>
+          <div class="stat-suffix">niveaux</div>
+          <div class="stat-label">Authentification</div>
+          <div class="stat-sub">JWT user + admin</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📦</div>
+          <div class="stat-num blue" data-target="0" data-suffix="dep">0</div>
+          <div class="stat-label">Dépendances natives</div>
+          <div class="stat-sub">WebAssembly only</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LANGS SECTION -->
+    <div class="langs-section">
+      <div class="section-label">Composition du code</div>
+      <div class="langs-grid">
+        <div class="lang-card">
+          <div class="lang-header">
+            <span class="lang-icon"></span>
+            <span class="lang-title">Langages</span>
+          </div>
+          <div class="lang-bars" id="lang-bars-main"></div>
+          <div class="lang-detail">Analyse dynamique des fichiers du projet</div>
+        </div>
+        <div class="lang-card">
+          <div class="lang-header">
+            <span class="lang-icon">🏗️</span>
+            <span class="lang-title">Architecture</span>
+          </div>
+          <div class="lang-bars" id="lang-bars-arc">
+            <div class="lang-bar-row">
+              <span class="lang-name">Frontend</span>
+              <div class="lang-bar"><div class="lang-bar-fill html" data-pct="0" style="background: linear-gradient(90deg, #4bb8e8, #6dd5ed);"></div></div>
+              <span class="lang-pct">0%</span>
+            </div>
+            <div class="lang-bar-row">
+              <span class="lang-name">Backend</span>
+              <div class="lang-bar"><div class="lang-bar-fill js" data-pct="0" style="background: linear-gradient(90deg, #68d391, #9ae6b4);"></div></div>
+              <span class="lang-pct">0%</span>
+            </div>
+            <div class="lang-bar-row">
+              <span class="lang-name">Config</span>
+              <div class="lang-bar"><div class="lang-bar-fill json" data-pct="0" style="background: linear-gradient(90deg, #f6ad55, #fbd38d);"></div></div>
+              <span class="lang-pct">0%</span>
+            </div>
+          </div>
+          <div class="lang-detail">Répartition par dossier du projet</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TIMELINE SECTION -->
+    <div class="timeline-section">
+      <div class="timeline-header">
+        <div class="section-label" style="margin-bottom: 0;">Journal de dev</div>
+        <button class="timeline-refresh" id="refresh-commits" onclick="fetchGitHubCommits()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 4v6h-6M1 20v-6h6"/>
+            <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+          </svg>
+          Actualiser
+        </button>
+      </div>
+      <div class="tl-github" id="tl-github">Chargement depuis GitHub...</div>
+      <div class="timeline" id="timeline-container">
+
+        <div class="tl-entry" style="--dot-color: var(--gold);">
+          <div class="tl-date">Début du projet · 2025</div>
+          <div class="tl-title">Naissance de <b>NathBank</b></div>
+          <div class="tl-desc">Premier projet full-stack. Comptes utilisateurs, virements, authentification JWT. Le point de départ de tout l'écosystème.</div>
+          <div class="tl-tags">
+            <span class="tl-tag">Node.js</span>
+            <span class="tl-tag">Express</span>
+            <span class="tl-tag">SQLite</span>
+            <span class="tl-tag">JWT</span>
+          </div>
+        </div>
+
+        <div class="tl-entry" style="--dot-color: var(--red);">
+          <div class="tl-date">2025</div>
+          <div class="tl-title">Lancement de <b>NathStore</b></div>
+          <div class="tl-desc">Boutique e-commerce avec 222 produits thème Hitman 2. Import JSON en masse, panel admin complet, intégration paiement NathBank.</div>
+          <div class="tl-tags">
+            <span class="tl-tag">222 produits</span>
+            <span class="tl-tag">Admin CRUD</span>
+            <span class="tl-tag">Panier</span>
+          </div>
+        </div>
+
+        <div class="tl-entry" style="--dot-color: #4bb8e8;">
+          <div class="tl-date">2025 · Migration</div>
+          <div class="tl-title">Abandon de <b>sqlite3</b> natif</div>
+          <div class="tl-desc">Migration vers sql.js (WebAssembly) pour éliminer les problèmes de compilation node-gyp sur Windows. Zéro dépendance native.</div>
+          <div class="tl-tags">
+            <span class="tl-tag">sql.js</span>
+            <span class="tl-tag">WebAssembly</span>
+            <span class="tl-tag">Cross-platform</span>
+          </div>
+        </div>
+
+        <div class="tl-entry" style="--dot-color: var(--purple);">
+          <div class="tl-date">2025 – 2026</div>
+          <div class="tl-title">Création de <b>NathNotes</b></div>
+          <div class="tl-desc">Application de notes style Apple Notes. Dark/light mode, trois panneaux, typographie premium. Intégrée à l'écosystème KernelAndCo.</div>
+          <div class="tl-tags">
+            <span class="tl-tag">Dark mode</span>
+            <span class="tl-tag">3 panneaux</span>
+            <span class="tl-tag">sql.js</span>
+          </div>
+        </div>
+
+        <div class="tl-entry" style="--dot-color: var(--gold); opacity: 0.5;">
+          <div class="tl-date">En cours · 2026</div>
+          <div class="tl-title">Missions & <b>Gamification</b></div>
+          <div class="tl-desc">Système de missions gamifiées dans NathBank. Récompenses, progression, WebSockets pour les notifications en temps réel.</div>
+          <div class="tl-tags">
+            <span class="tl-tag">WebSockets</span>
+            <span class="tl-tag">Missions</span>
+            <span class="tl-tag">En cours →</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <footer>
+      <p>© 2026 — Nathanaël — Projet SNT · Bac Pro CIEL</p>
+      <span>Backend <b>localhost:3000</b> · Frontend <b>localhost:5500</b></span>
+    </footer>
+
+  </div>
+
+  <script>
+    // === CONFIGURATION ===
+    const GITHUB_REPO = 'Nathlecon/prjbank';
+
+    // === SIMULATED DATA (fallback) ===
+    const SIMULATED_COMMITS = [
+      { date: '2026-03-19', message: 'feat: Ajout du système de gamification NathBank', author: 'Nathanaël', color: 'var(--gold)' },
+      { date: '2026-03-15', message: 'fix: Correction du bug de paiement', author: 'Nathanaël', color: 'var(--red)' },
+      { date: '2026-03-10', message: 'feat: Animation des statistiques en temps réel', author: 'Nathanaël', color: '#4bb8e8' },
+      { date: '2026-03-05', message: 'style: Refonte du design dark mode', author: 'Nathanaël', color: 'var(--purple)' },
+      { date: '2026-02-28', message: 'refactor: Migration vers sql.js v2', author: 'Nathanaël', color: 'var(--gold)' },
+      { date: '2026-02-20', message: 'feat: Ajout du panel admin NathStore', author: 'Nathanaël', color: 'var(--red)' },
+      { date: '2026-02-10', message: 'docs: Mise à jour du README', author: 'Nathanaël', color: '#4bb8e8' },
+      { date: '2026-01-25', message: 'feat: Création de NathNotes', author: 'Nathanaël', color: 'var(--purple)' },
+    ];
+
+    // Stats par défaut (fallback)
+    let CODE_STATS = {
+      total: 12450,
+      languages: {
+        html: { lines: 8540, pct: 68.6 },
+        js: { lines: 2480, pct: 19.9 },
+        css: { lines: 980, pct: 7.9 },
+        json: { lines: 450, pct: 3.6 }
+      },
+      architecture: {
+        frontend: { lines: 8980, pct: 72.1 },
+        backend: { lines: 2780, pct: 22.3 },
+        config: { lines: 690, pct: 5.5 }
+      }
+    };
+
+    // === LOADER ===
+    let loaderSkipped = false;
+    
+    function skipLoader() {
+      loaderSkipped = true;
+      revealApp();
+    }
+
+    function revealApp() {
+      document.getElementById('loader').classList.add('hidden');
+      document.getElementById('skip-btn').classList.add('hidden');
+      const app = document.getElementById('app');
+      app.classList.add('visible');
+      setTimeout(() => {
+        document.querySelectorAll('.app-card').forEach(c => c.classList.add('on'));
+      }, 400);
+    }
+
+    window.addEventListener('load', () => {
+      if (!loaderSkipped) {
+        setTimeout(() => {
+          if (!loaderSkipped) revealApp();
+        }, 9500);
+      }
+    });
+
+    // === SCROLL OBSERVER ===
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('on');
+          
+          // Counter animation pour les stat-num
+          const numEl = entry.target.querySelector('[data-target]');
+          if (numEl && !numEl.dataset.done) {
+            animateCounter(numEl);
+          }
+          
+          // Lang bars animation
+          const langBars = entry.target.querySelectorAll('.lang-bar-fill');
+          if (langBars.length > 0) {
+            langBars.forEach(bar => {
+              if (!bar.dataset.animated) {
+                bar.dataset.animated = '1';
+                setTimeout(() => {
+                  const pct = bar.dataset.pct;
+                  bar.style.width = pct + '%';
+                  bar.parentElement.nextElementSibling.textContent = pct + '%';
+                }, 300);
+              }
+            });
+          }
+        }
+      });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll('.stat-card, .tl-entry, .lang-card').forEach(el => observer.observe(el));
+
+    // === COUNTER ANIMATION ===
+    function animateCounter(numEl) {
+      numEl.dataset.done = '1';
+      let target = parseInt(numEl.dataset.target);
+      const suffix = numEl.dataset.suffix || '';
+      
+      // Si target est 0 et c'est le compteur de lignes, utiliser les vraies stats
+      if (target === 0 && numEl.id === 'stat-lines') {
+        target = CODE_STATS.total;
+      }
+      
+      if (target === 0) { 
+        numEl.textContent = '0' + suffix; 
+        return; 
+      }
+      
+      const duration = 1500;
+      const step = 16;
+      const increment = target / (duration / step);
+      let current = 0;
+      
+      const timer = setInterval(() => {
+        current = Math.min(current + increment, target);
+        if (numEl.id === 'stat-lines') {
+          numEl.textContent = Math.floor(current).toLocaleString();
+        } else {
+          numEl.textContent = Math.floor(current);
+        }
+        if (current >= target) {
+          clearInterval(timer);
+          if (suffix) numEl.textContent = suffix;
+        }
+      }, step);
+    }
+
+    // === LANGUAGE COLORS ===
+    const langColors = {
+      html: 'linear-gradient(90deg, #e84b6b, #ff6b8a)',
+      js: 'linear-gradient(90deg, #f7df1e, #ffeb3b)',
+      javascript: 'linear-gradient(90deg, #f7df1e, #ffeb3b)',
+      css: 'linear-gradient(90deg, #264de4, #4a7cff)',
+      json: 'linear-gradient(90deg, #9b6ef3, #c4a4ff)',
+      md: 'linear-gradient(90deg, #083fa1, #2d6cdb)',
+      markdown: 'linear-gradient(90deg, #083fa1, #2d6cdb)',
+      python: 'linear-gradient(90deg, #3776ab, #ffd43b)',
+      java: 'linear-gradient(90deg, #b07219, #d4a574)',
+      php: 'linear-gradient(90deg, #777bb4, #a89cd4)',
+      typescript: 'linear-gradient(90deg, #3178c6, #5a9fd4)',
+      go: 'linear-gradient(90deg, #00add8, #44ddee)',
+      rust: 'linear-gradient(90deg, #dea584, #f0c08a)',
+      c: 'linear-gradient(90deg, #555555, #888888)',
+      cpp: 'linear-gradient(90deg, #f34b7d, #ff7a9e)',
+      'c++': 'linear-gradient(90deg, #f34b7d, #ff7a9e)',
+      csharp: 'linear-gradient(90deg, #178600, #2ea043)',
+      'c#': 'linear-gradient(90deg, #178600, #2ea043)',
+      ruby: 'linear-gradient(90deg, #cc342d, #e85a5a)',
+      swift: 'linear-gradient(90deg, #fa7343, #ff9a6c)',
+      kotlin: 'linear-gradient(90deg, #a97bff, #c4a4ff)',
+      shell: 'linear-gradient(90deg, #89e051, #a8ed5a)',
+      bash: 'linear-gradient(90deg, #89e051, #a8ed5a)',
+      sql: 'linear-gradient(90deg, #e38c00, #ffb347)',
+      vue: 'linear-gradient(90deg, #42b883, #6cdbaa)',
+      svelte: 'linear-gradient(90deg, #ff3e00, #ff6b4a)',
+      scss: 'linear-gradient(90deg, #c6538c, #e08aaf)',
+      sass: 'linear-gradient(90deg, #c6538c, #e08aaf)',
+      yaml: 'linear-gradient(90deg, #cb171e, #e54b4b)',
+      xml: 'linear-gradient(90deg, #e37933, #f5a060)',
+      txt: 'linear-gradient(90deg, #666666, #999999)'
+    };
+
+    function getLangColor(lang) {
+      const key = lang.toLowerCase();
+      if (langColors[key]) return langColors[key];
+      // Generate a consistent color based on language name hash
+      let hash = 0;
+      for (let i = 0; i < key.length; i++) {
+        hash = key.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      const h = Math.abs(hash % 360);
+      return `linear-gradient(90deg, hsl(${h}, 70%, 50%), hsl(${h}, 70%, 65%))`;
+    }
+
+    // === LANGUAGE BARS ===
+    function initLanguageBars() {
+      // Architecture (keep fixed)
+      const arcBars = document.querySelectorAll('#lang-bars-arc .lang-bar-fill');
+      const arcs = ['frontend', 'backend', 'config'];
+      arcBars.forEach((bar, i) => {
+        bar.dataset.pct = CODE_STATS.architecture[arcs[i]].pct;
+      });
+      
+      // Update architecture pct displays
+      document.querySelectorAll('#lang-bars-arc .lang-pct').forEach((el, i) => {
+        el.textContent = CODE_STATS.architecture[arcs[i]].pct + '%';
+      });
+    }
+
+    function renderLanguageBars(langData) {
+      const container = document.getElementById('lang-bars-main');
+      if (!container || !langData) return;
+      
+      const total = Object.values(langData).reduce((a, b) => a + b, 0);
+      const sortedLangs = Object.entries(langData)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6);
+      
+      container.innerHTML = sortedLangs.map(([lang, bytes]) => {
+        const pct = ((bytes / total) * 100).toFixed(1);
+        const color = getLangColor(lang);
+        // Approximation: bytes / 45 = lignes approx
+        const lines = '~' + Math.round(bytes / 45).toLocaleString() + ' lignes';
+        return `
+          <div class="lang-bar-row">
+            <span class="lang-name">${lang}</span>
+            <div class="lang-bar"><div class="lang-bar-fill" data-lang="${lang.toLowerCase()}" data-pct="${pct}" style="background: ${color}"></div></div>
+            <span class="lang-pct">${pct}%<span class="lang-lines">${lines}</span></span>
+          </div>
+        `;
+      }).join('');
+      
+      // Animate bars
+      setTimeout(() => {
+        container.querySelectorAll('.lang-bar-fill').forEach(bar => {
+          const pct = bar.dataset.pct || 0;
+          bar.style.width = pct + '%';
+        });
+      }, 100);
+    }
+
+    // === GITHUB DATA ===
+    async function fetchGitHubData() {
+      try {
+        // Fetch from backend API (handles token securely)
+        const response = await fetch('http://localhost:3000/api/github-stats');
+        if (response.ok) {
+          const data = await response.json();
+          
+          // Render language bars with line counts
+          if (data.languages) {
+            renderLanguageBars(data.languages);
+          }
+          
+          // Set total commits
+          if (data.totalCommits) {
+            CODE_STATS.total = data.totalCommits;
+          }
+        }
+
+        // Update UI
+        initLanguageBars();
+        const linesEl = document.getElementById('stat-lines');
+        if (linesEl) {
+          linesEl.dataset.target = CODE_STATS.total || 1;
+          linesEl.dataset.done = '';
+          // Re-trigger counter animation
+          setTimeout(() => animateCounter(linesEl), 100);
+        }
+      } catch (e) {
+        console.log('GitHub API fallback:', e.message);
+      }
+    }
+
+    async function fetchGitHubCommits() {
+      const btn = document.getElementById('refresh-commits');
+      const githubLabel = document.getElementById('tl-github');
+      const container = document.getElementById('timeline-container');
+      
+      btn.classList.add('spinning');
+      
+      try {
+        githubLabel.textContent = '🌐 Chargement depuis GitHub...';
+        githubLabel.classList.add('visible');
+        
+        const response = await fetch('http://localhost:3000/api/github-commits');
+        if (!response.ok) throw new Error('GitHub API error: ' + response.status);
+        
+        const commits = await response.json();
+        const formatted = commits.map(c => ({
+          date: c.commit.author.date.split('T')[0],
+          message: c.commit.message.split('\n')[0],
+          author: c.commit.author.name,
+          color: 'var(--gold)'
+        }));
+        
+        renderCommits(formatted);
+        githubLabel.textContent = '🌐 ' + GITHUB_REPO + ' - ' + commits.length + ' commits récents';
+      } catch (err) {
+        // Fallback to demo
+        console.log('Commits fetch failed, using demo:', err.message);
+        renderCommits(SIMULATED_COMMITS);
+        githubLabel.textContent = '📱 Mode démo (GitHub indisponible)';
+        githubLabel.classList.add('visible');
+      }
+      
+      btn.classList.remove('spinning');
+    }
+
+    function renderCommits(commits) {
+      const container = document.getElementById('timeline-container');
+      container.innerHTML = commits.map((commit, i) => `
+        <div class="tl-entry" style="--dot-color: ${commit.color}; transition-delay: ${i * 0.1}s;">
+          <div class="tl-date">${formatDate(commit.date)}</div>
+          <div class="tl-title">${commit.message}</div>
+          <div class="tl-desc">Commit par <strong>${commit.author}</strong></div>
+          <div class="tl-tags">
+            <span class="tl-tag" style="--dot-color: ${commit.color}">commit</span>
+            <span class="tl-tag" style="--dot-color: ${commit.color}">${commit.date}</span>
+          </div>
+        </div>
+      `).join('');
+      
+      // Re-observer les nouveaux éléments
+      container.querySelectorAll('.tl-entry').forEach(el => observer.observe(el));
+    }
+
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }).replace('.', '');
+    }
+
+    // === INIT ===
+    fetchGitHubData().then(() => {
+      initLanguageBars();
+      fetchGitHubCommits();
+    });
+  </script>
+</body>
+</html>
+
+
+</body>
+</html>

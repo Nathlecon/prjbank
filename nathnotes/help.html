@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NathNotes — Guide API</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --accent: #9b6ef3; --blue: #7aabff; --vert: #4caf7d; --rouge: #e05555; --yellow: #ffd166; }
+    [data-theme="dark"] { --bg: #0a0a0a; --bg-2: #141414; --bg-3: #1e1e1e; --border: #2a2a2a; --text: #f0ece4; --text-dim: #5a5650; --text-mid: #8a8070; }
+    body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; }
+
+    nav { position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); padding: 0 40px; height: 64px; display: flex; align-items: center; justify-content: space-between; background: rgba(10,10,10,0.95); backdrop-filter: blur(20px); }
+    .nav-logo { font-family: 'Instrument Serif', serif; font-size: 20px; font-style: italic; }
+    .nav-logo span { color: var(--accent); }
+    .nav-badge { background: var(--accent); color: #fff; font-size: 9px; font-weight: 700; letter-spacing: 2px; padding: 3px 10px; border-radius: 100px; margin-left: 10px; }
+    .btn-back { background: none; border: 1px solid var(--border); color: var(--text-mid); font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 600; padding: 7px 16px; cursor: pointer; transition: all 0.2s; border-radius: 2px; text-decoration: none; display: inline-flex; align-items: center; }
+    .btn-back:hover { border-color: var(--text); color: var(--text); }
+
+    main { max-width: 900px; margin: 0 auto; padding: 60px 40px; }
+
+    .page-tag { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+    .page-tag::before { content: ''; width: 24px; height: 1px; background: var(--accent); }
+    .page-title { font-family: 'Instrument Serif', serif; font-size: clamp(2rem, 5vw, 3.5rem); font-style: italic; line-height: 1.05; margin-bottom: 16px; }
+    .page-sub { font-size: 15px; color: var(--text-mid); line-height: 1.7; margin-bottom: 60px; max-width: 560px; }
+
+    .toc { background: var(--bg-2); border: 1px solid var(--border); border-left: 3px solid var(--accent); padding: 24px 28px; margin-bottom: 60px; border-radius: 2px; }
+    .toc-title { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 16px; }
+    .toc a { display: block; color: var(--accent); text-decoration: none; font-size: 13px; padding: 4px 0; font-family: 'DM Mono', monospace; transition: color 0.2s; }
+    .toc a:hover { color: var(--text); }
+    .toc a::before { content: '→ '; }
+
+    .section { margin-bottom: 60px; }
+    .section-num { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 3px; margin-bottom: 8px; }
+    .section-title { font-family: 'Instrument Serif', serif; font-size: 28px; font-style: italic; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+    .section p { font-size: 14px; color: var(--text-mid); line-height: 1.8; margin-bottom: 16px; }
+    .section p strong { color: var(--text); }
+
+    .code-block { background: #0d0d0d; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; margin: 20px 0; position: relative; }
+    .code-header { background: var(--bg-3); padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+    .code-lang { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; }
+    .code-body { padding: 20px; font-family: 'DM Mono', monospace; font-size: 12px; line-height: 1.8; overflow-x: auto; white-space: pre; }
+    .c-key { color: #7aabff; }
+    .c-str { color: #ce9178; }
+    .c-num { color: #b5cea8; }
+    .c-null { color: #569cd6; }
+    .c-comment { color: #6a9955; font-style: italic; }
+    .c-bracket { color: var(--text-dim); }
+
+    .fields-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    .fields-table th { background: var(--bg-3); padding: 10px 16px; text-align: left; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); font-weight: 400; }
+    .fields-table td { padding: 12px 16px; border-top: 1px solid var(--border); font-size: 13px; vertical-align: top; }
+    .fields-table tr:hover td { background: var(--bg-2); }
+    .field-name { font-family: 'DM Mono', monospace; color: var(--accent); }
+    .field-type { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-dim); }
+    .badge-req { background: rgba(155,110,243,0.15); color: var(--accent); font-size: 9px; font-weight: 700; letter-spacing: 2px; padding: 2px 8px; border-radius: 100px; }
+    .badge-opt { background: rgba(76,175,125,0.12); color: var(--vert); font-size: 9px; font-weight: 700; letter-spacing: 2px; padding: 2px 8px; border-radius: 100px; }
+
+    .callout { padding: 16px 20px; border-radius: 2px; margin: 20px 0; font-size: 13px; line-height: 1.7; }
+    .callout.info { background: rgba(122,171,255,0.08); border-left: 3px solid var(--blue); color: var(--text-mid); }
+    .callout.info strong { color: var(--blue); }
+    .callout.ok { background: rgba(76,175,125,0.08); border-left: 3px solid var(--vert); color: var(--text-mid); }
+    .callout.ok strong { color: var(--vert); }
+    .callout.err { background: rgba(224,85,85,0.08); border-left: 3px solid var(--rouge); color: var(--text-mid); }
+    .callout.err strong { color: var(--rouge); }
+
+    footer { border-top: 1px solid var(--border); padding: 24px 40px; text-align: center; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-dim); margin-top: 60px; }
+
+    @media (max-width: 768px) { nav { padding: 0 20px; } main { padding: 40px 20px; } }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div>
+      <span class="nav-logo">Nath<span>Notes</span></span>
+      <span class="nav-badge">GUIDE API</span>
+    </div>
+    <a href="index.html" class="btn-back">← Retour à l'app</a>
+  </nav>
+
+  <main>
+    <p class="page-tag">Documentation API</p>
+    <h1 class="page-title">Guide d'intégration</h1>
+    <p class="page-sub">Tout ce qu'il faut pour connecter ton frontend à l'API NathNotes. Backend tourne sur le port <strong>3001</strong>.</p>
+
+    <div class="toc">
+      <div class="toc-title">Table des matières</div>
+      <a href="#auth">Authentification</a>
+      <a href="#notes">Gestion des notes</a>
+      <a href="#folders">Gestion des dossiers</a>
+      <a href="#exemples">Exemples JSON</a>
+    </div>
+
+    <!-- AUTH -->
+    <section class="section" id="auth">
+      <p class="section-num">01</p>
+      <h2 class="section-title">Authentification</h2>
+      
+      <p>NathNotes utilise des <strong>JWT tokens</strong> pour l'authentification. Le token est passé dans le header <code>Authorization: Bearer <token></code>.</p>
+
+      <h3 style="font-size:14px;margin:20px 0 10px;color:var(--text)">POST /api/auth/register</h3>
+      <p>Créer un nouveau compte utilisateur.</p>
+      
+      <table class="fields-table">
+        <tr><th>Champ</th><th>Type</th><th>Description</th></tr>
+        <tr><td class="field-name">email</td><td class="field-type">string</td><td>Email unique</td></tr>
+        <tr><td class="field-name">password</td><td class="field-type">string</td><td>Mot de passe</td></tr>
+        <tr><td class="field-name">name</td><td class="field-type">string</td><td>Nom d'affichage</td></tr>
+      </table>
+
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">Requête</span></div>
+        <div class="code-body"><span class="c-bracket">{</span>
+  <span class="c-key">"email"</span><span class="c-bracket">:</span> <span class="c-str">"user@example.com"</span><span class="c-bracket">,</span>
+  <span class="c-key">"password"</span><span class="c-bracket">:</span> <span class="c-str">"monmotdepasse"</span><span class="c-bracket">,</span>
+  <span class="c-key">"name"</span><span class="c-bracket">:</span> <span class="c-str">"Jean Dupont"</span>
+<span class="c-bracket">}</span></div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">Réponse</span></div>
+        <div class="code-body"><span class="c-bracket">{</span>
+  <span class="c-key">"token"</span><span class="c-bracket">:</span> <span class="c-str">"eyJhbGciOiJIUzI1NiIs..."</span><span class="c-bracket">,</span>
+  <span class="c-key">"user"</span><span class="c-bracket">:</span> <span class="c-bracket">{</span>
+    <span class="c-key">"id"</span><span class="c-bracket">:</span> <span class="c-num">1</span><span class="c-bracket">,</span>
+    <span class="c-key">"email"</span><span class="c-bracket">:</span> <span class="c-str">"user@example.com"</span><span class="c-bracket">,</span>
+    <span class="c-key">"name"</span><span class="c-bracket">:</span> <span class="c-str">"Jean Dupont"</span>
+  <span class="c-bracket">}</span>
+<span class="c-bracket">}</span></div>
+      </div>
+
+      <h3 style="font-size:14px;margin:20px 0 10px;color:var(--text)">POST /api/auth/login</h3>
+      <p>Connexion avec email et mot de passe.</p>
+      
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">Requête</span></div>
+        <div class="code-body"><span class="c-bracket">{</span>
+  <span class="c-key">"email"</span><span class="c-bracket">:</span> <span class="c-str">"user@example.com"</span><span class="c-bracket">,</span>
+  <span class="c-key">"password"</span><span class="c-bracket">:</span> <span class="c-str">"monmotdepasse"</span>
+<span class="c-bracket">}</span></div>
+      </div>
+    </section>
+
+    <!-- NOTES -->
+    <section class="section" id="notes">
+      <p class="section-num">02</p>
+      <h2 class="section-title">Gestion des notes</h2>
+
+      <h3 style="font-size:14px;margin:20px 0 10px;color:var(--text)">GET /api/notes</h3>
+      <p>Récupérer toutes les notes de l'utilisateur (non supprimées).</p>
+      <div class="callout info"><strong>Endpoint protégé</strong> — nécessite le token JWT</div>
+
+      <h3 style="font-size:14px;margin:20px 0 10px;color:var(--text)">POST /api/notes</h3>
+      <p>Créer une nouvelle note.</p>
+      
+      <table class="fields-table">
+        <tr><th>Champ</th><th>Type</th><th>Description</th></tr>
+        <tr><td class="field-name">title</td><td class="field-type">string</td><td>Titre de la note <span class="badge-opt">OPTIONNEL</span></td></tr>
+        <tr><td class="field-name">content</td><td class="field-type">string</td><td>Contenu HTML <span class="badge-opt">OPTIONNEL</span></td></tr>
+        <tr><td class="field-name">folder</td><td class="field-type">string</td><td>ID du dossier <span class="badge-opt">OPTIONNEL</span> (défaut: "all")</td></tr>
+      </table>
+
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">Réponse</span></div>
+        <div class="code-body"><span class="c-bracket">{</span>
+  <span class="c-key">"id"</span><span class="c-bracket">:</span> <span class="c-num">1</span><span class="c-bracket">,</span>
+  <span class="c-key">"user_id"</span><span class="c-bracket">:</span> <span class="c-num">1</span><span class="c-bracket">,</span>
+  <span class="c-key">"title"</span><span class="c-bracket">:</span> <span class="c-str">"Ma note"</span><span class="c-bracket">,</span>
+  <span class="c-key">"content"</span><span class="c-bracket">:</span> <span class="c-str">"<p>Contenu...</p>"</span><span class="c-bracket">,</span>
+  <span class="c-key">"folder"</span><span class="c-bracket">:</span> <span class="c-str">"work"</span><span class="c-bracket">,</span>
+  <span class="c-key">"favorite"</span><span class="c-bracket">:</span> <span class="c-num">0</span><span class="c-bracket">,</span>
+  <span class="c-key">"created_at"</span><span class="c-bracket">:</span> <span class="c-str">"2026-01-01 12:00:00"</span><span class="c-bracket">,</span>
+  <span class="c-key">"updated_at"</span><span class="c-bracket">:</span> <span class="c-str">"2026-01-01 12:00:00"</span>
+<span class="c-bracket">}</span></div>
+      </div>
+
+      <h3 style="font-size:14px;margin:20px 0 10px;color:var(--text)">PUT /api/notes/:id</h3>
+      <p>Modifier une note existante.</p>
+      
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">Requête</span></div>
+        <div class="code-body"><span class="c-bracket">{</span>
+  <span class="c-key">"title"</span><span class="c-bracket">:</span> <span class="c-str">"Nouveau titre"</span><span class="c-bracket">,</span>
+  <span class="c-key">"content"</span><span class="c-bracket">:</span> <span class="c-str">"<p>Nouveau contenu</p>"</span><span class="c-bracket">,</span>
+  <span class="c-key">"folder"</span><span class="c-bracket">:</span> <span class="c-str">"ideas"</span><span class="c-bracket">,</span>
+  <span class="c-key">"favorite"</span><span class="c-bracket">:</span> <span class="c-num">1</span>
+<span class="c-bracket">}</span></div>
+      </div>
+
+      <h3 style="font-size:14px;margin:20px 0 10px;color:var(--text)">DELETE /api/notes/:id</h3>
+      <p>Soft-delete (déplacer à la corbeille).</p>
+      <div class="callout ok"><strong>Soft delete</strong> — la note n'est pas définitivement supprimée, elle va dans la corbeille (deleted=1)</div>
+
+      <h3 style="font-size:14px;margin:20px 0 10px;color:var(--text)">GET /api/notes/deleted</h3>
+      <p>Récupérer les notes supprimées (corbeille).</p>
+
+      <h3 style="font-size:14px;margin:20px 0 10px;color:var(--text)">POST /api/notes/:id/restore</h3>
+      <p>Restaurer une note depuis la corbeille.</p>
+    </section>
+
+    <!-- FOLDERS -->
+    <section class="section" id="folders">
+      <p class="section-num">03</p>
+      <h2 class="section-title">Gestion des dossiers</h2>
+
+      <h3 style="font-size:14px;margin:20px 0 10px;color:var(--text)">GET /api/folders</h3>
+      <p>Récupérer tous les dossiers. Retourne les dossiers par défaut + les dossiers personnalisés de l'utilisateur.</p>
+      
+      <div class="callout info"><strong>Dossiers par défaut</strong> — All, Work, Personal, Ideas sont toujours présents (is_default: true)</div>
+
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">Réponse</span></div>
+        <div class="code-body"><span class="c-bracket">[</span>
+  <span class="c-bracket">{</span><span class="c-key">"id"</span><span class="c-bracket">:</span><span class="c-str">"all"</span>,<span class="c-key">"name"</span><span class="c-bracket">:</span><span class="c-str">"Tout"</span>,<span class="c-key">"icon"</span><span class="c-bracket">:</span><span class="c-str">"📁"</span>,<span class="c-key">"is_default"</span><span class="c-bracket">:</span><span class="c-null">true</span><span class="c-bracket">}</span>,
+  <span class="c-bracket">{</span><span class="c-key">"id"</span><span class="c-bracket">:</span><span class="c-str">"work"</span>,<span class="c-key">"name"</span><span class="c-bracket">:</span><span class="c-str">"Travail"</span>,<span class="c-key">"icon"</span><span class="c-bracket">:</span><span class="c-str">"💼"</span>,<span class="c-key">"is_default"</span><span class="c-bracket">:</span><span class="c-null">true</span><span class="c-bracket">}</span>,
+  <span class="c-bracket">{</span><span class="c-key">"id"</span><span class="c-bracket">:</span><span class="c-num">5</span>,<span class="c-key">"name"</span><span class="c-bracket">:</span><span class="c-str">"Mes projets"</span>,<span class="c-key">"icon"</span><span class="c-bracket">:</span><span class="c-str">"🚀"</span>,<span class="c-key">"is_default"</span><span class="c-bracket">:</span><span class="c-null">false</span><span class="c-bracket">}</span>
+<span class="c-bracket">]</span></div>
+      </div>
+
+      <h3 style="font-size:14px;margin:20px 0 10px;color:var(--text)">POST /api/folders</h3>
+      <p>Créer un nouveau dossier personnalisé.</p>
+      
+      <table class="fields-table">
+        <tr><th>Champ</th><th>Type</th><th>Description</th></tr>
+        <tr><td class="field-name">name</td><td class="field-type">string</td><td>Nom du dossier <span class="badge-req">REQUIS</span></td></tr>
+        <tr><td class="field-name">icon</td><td class="field-type">string</td><td>Emoji <span class="badge-opt">OPTIONNEL</span> (défaut: 📁)</td></tr>
+        <tr><td class="field-name">color</td><td class="field-type">string</td><td>Couleur hex <span class="badge-opt">OPTIONNEL</span> (défaut: #e8b84b)</td></tr>
+      </table>
+
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">Requête</span></div>
+        <div class="code-body"><span class="c-bracket">{</span>
+  <span class="c-key">"name"</span><span class="c-bracket">:</span> <span class="c-str">"Mes projets"</span><span class="c-bracket">,</span>
+  <span class="c-key">"icon"</span><span class="c-bracket">:</span> <span class="c-str">"🚀"</span>
+<span class="c-bracket">}</span></div>
+      </div>
+    </section>
+
+    <!-- EXEMPLES -->
+    <section class="section" id="exemples">
+      <p class="section-num">04</p>
+      <h2 class="section-title">Exemples JSON</h2>
+
+      <p>Voici quelques exemples de payloads JSON pour tester l'API.</p>
+
+      <h3 style="font-size:14px;margin:20px 0 10px;color:var(--text)">Créer une note avec du HTML</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">POST /api/notes</span></div>
+        <div class="code-body"><span class="c-bracket">{</span>
+  <span class="c-key">"title"</span><span class="c-bracket">:</span> <span class="c-str">"Ma première note"</span><span class="c-bracket">,</span>
+  <span class="c-key">"content"</span><span class="c-bracket">:</span> <span class="c-str">"<h1>Hello World</h1><p>Ceci est <strong>gras</strong>.</p>"</span><span class="c-bracket">,</span>
+  <span class="c-key">"folder"</span><span class="c-bracket">:</span> <span class="c-str">"ideas"</span>
+<span class="c-bracket">}</span></div>
+      </div>
+
+      <h3 style="font-size:14px;margin:20px 0 10px;color:var(--text)">Mettre en favori</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">PUT /api/notes/1</span></div>
+        <div class="code-body"><span class="c-bracket">{</span>
+  <span class="c-key">"favorite"</span><span class="c-bracket">:</span> <span class="c-num">1</span>
+<span class="c-bracket">}</span></div>
+      </div>
+
+      <h3 style="font-size:14px;margin:20px 0 10px;color:var(--text)">Créer un dossier violet</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">POST /api/folders</span></div>
+        <div class="code-body"><span class="c-bracket">{</span>
+  <span class="c-key">"name"</span><span class="c-bracket">:</span> <span class="c-str">"Université"</span><span class="c-bracket">,</span>
+  <span class="c-key">"icon"</span><span class="c-bracket">:</span> <span class="c-str">"🎓"</span><span class="c-bracket">,</span>
+  <span class="c-key">"color"</span><span class="c-bracket">:</span> <span class="c-str">"#9b6ef3"</span>
+<span class="c-bracket">}</span></div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    © 2026 — NathProject — Documentation API
+  </footer>
+
+</body>
+</html>

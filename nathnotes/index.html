@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NathNotes — Take Notes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Syne:wght@400;500;600;700&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0d;
+      --surface: #141418;
+      --surface2: #1c1c22;
+      --border: #2a2a32;
+      --text: #f0efe8;
+      --text2: #8a898f;
+      --gold: #e8b84b;
+      --gold-dim: rgba(232, 184, 75, 0.15);
+      --r: 12px;
+      --glass: rgba(255,255,255,0.04);
+      --glass-b: rgba(255,255,255,0.08);
+    }
+
+    .light {
+      --bg: #f5f5f0;
+      --surface: #ffffff;
+      --surface2: #f0efe8;
+      --border: #e0e0dc;
+      --text: #1a1a1d;
+      --text2: #666;
+      --gold: #c9a227;
+      --gold-dim: rgba(201, 162, 39, 0.12);
+      --glass: rgba(0,0,0,0.03);
+      --glass-b: rgba(0,0,0,0.06);
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      overflow: hidden;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* Login Screen */
+    #login-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    #login-screen.hidden { display: none; }
+
+    .login-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px;
+      width: 90%;
+      max-width: 380px;
+    }
+
+    .login-logo {
+      font-family: 'Instrument Serif', serif;
+      font-size: 2rem;
+      font-style: italic;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .login-logo b { color: var(--gold); }
+
+    .login-subtitle {
+      text-align: center;
+      color: var(--text2);
+      font-size: 0.9rem;
+      margin-bottom: 30px;
+    }
+
+    .login-input {
+      width: 100%;
+      padding: 14px 16px;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.95rem;
+      outline: none;
+      margin-bottom: 12px;
+    }
+    .login-input:focus { border-color: var(--gold); }
+
+    .login-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--gold);
+      border: none;
+      border-radius: var(--r);
+      color: var(--bg);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: filter 0.2s;
+    }
+    .login-btn:hover { filter: brightness(1.1); }
+
+    .login-toggle {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.85rem;
+      color: var(--text2);
+    }
+    .login-toggle a {
+      color: var(--gold);
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .login-error {
+      color: #e84b6b;
+      font-size: 0.8rem;
+      text-align: center;
+      margin-top: 10px;
+      display: none;
+    }
+
+    /* App Layout */
+    .app { display: none; }
+    .app.visible { display: grid; }
+    .app {
+      grid-template-columns: 240px 280px 1fr;
+      height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding: 8px;
+    }
+
+    .logo {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.4rem;
+      font-style: italic;
+    }
+    .logo b { color: var(--gold); }
+
+    .theme-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--glass);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .theme-btn:hover {
+      border-color: var(--gold);
+      background: var(--gold-dim);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      background: var(--glass);
+      border-radius: var(--r);
+      margin-bottom: 20px;
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--bg);
+    }
+
+    .user-name {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .user-email {
+      font-size: 0.7rem;
+      color: var(--text2);
+    }
+
+    .sidebar-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .action-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--r);
+      border: none;
+      background: transparent;
+      color: var(--text2);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: left;
+    }
+    .action-btn:hover {
+      background: var(--glass);
+      color: var(--text);
+    }
+    .action-btn.primary {
+      background: var(--gold);
+      color: var(--bg);
+      font-weight: 600;
+    }
+    .action-btn.primary:hover { filter: brightness(1.1); }
+    .action-btn.logout { color: #e84b6b; }
+
+    /* Folders */
+    .folders-section {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .folders-title {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      color: var(--text2);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      padding: 0 12px;
+    }
+
+    .folder-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .folder-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: var(--r);
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--text2);
+    }
+    .folder-item:hover, .folder-item.active {
+      background: var(--glass);
+      color: var(--text);
+    }
+    .folder-item.active {
+      background: var(--gold-dim);
+      color: var(--gold);
+    }
+
+    .folder-icon { font-size: 1rem; }
+    .folder-name { font-size: 0.85rem; flex: 1; }
+    .folder-count {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--text2);
+    }
+
+    /* Notes List */
+    .notes-list {
+      background: var(--surface2);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .notes-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 8px 12px;
+    }
+    .search-box input {
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.85rem;
+      outline: none;
+      width: 100%;
+    }
+    .search-box input::placeholder { color: var(--text2); }
+
+    .notes-items {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    .note-item {
+      padding: 14px;
+      border-radius: var(--r);
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 4px;
+    }
+    .note-item:hover { background: var(--glass); }
+    .note-item.active { background: var(--gold-dim); }
+
+    .note-title {
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .note-preview {
+      font-size: 0.75rem;
+      color: var(--text2);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .note-date {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      color: var(--text2);
+      margin-top: 8px;
+    }
+
+    /* Editor */
+    .editor {
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .editor-header {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .editor-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.8rem;
+      font-style: italic;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      outline: none;
+      width: 100%;
+    }
+
+    .editor-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--text2);
+    }
+
+    .editor-body {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+    }
+
+    .editor-content {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      line-height: 1.8;
+      color: var(--text);
+      min-height: 100%;
+      outline: none;
+    }
+
+    .editor-content:empty::before {
+      content: 'Commencez à écrire...';
+      color: var(--text2);
+    }
+
+    .editor-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--r);
+      border: 1px solid var(--border);
+      background: var(--glass);
+      color: var(--text2);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .icon-btn:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    /* Empty state */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--text2);
+      text-align: center;
+      padding: 40px;
+    }
+    .empty-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+    .empty-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.5rem;
+      font-style: italic;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    .empty-desc {
+      font-size: 0.9rem;
+      max-width: 280px;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text2); }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .app { grid-template-columns: 200px 1fr; }
+      .notes-list { display: none; }
+    }
+    @media (max-width: 600px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Login Screen -->
+  <div id="login-screen">
+    <div class="login-box">
+      <div class="login-logo">Nath<b>Notes</b></div>
+      <div class="login-subtitle">Connectez-vous pour accéder à vos notes</div>
+      
+      <div id="login-form">
+        <input type="email" class="login-input" id="email" placeholder="Email">
+        <input type="password" class="login-input" id="password" placeholder="Mot de passe">
+        <input type="text" class="login-input" id="name" placeholder="Nom (inscription uniquement)" style="display:none">
+        <button class="login-btn" onclick="handleLogin()" id="login-btn">Se connecter</button>
+        <div class="login-error" id="login-error"></div>
+      </div>
+      
+      <div class="login-toggle">
+        <span id="toggle-text">Pas encore de compte ?</span>
+        <a onclick="toggleMode()" id="toggle-link">S'inscrire</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for new folder -->
+  <div id="folderModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;align-items:center;justify-content:center;">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;width:90%;max-width:320px;">
+      <div style="font-family:'Instrument Serif',serif;font-size:1.3rem;font-style:italic;margin-bottom:16px;">Nouveau dossier</div>
+      <input type="text" id="folderNameInput" class="login-input" placeholder="Nom du dossier" style="margin-bottom:16px;">
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="action-btn" onclick="closeFolderModal()">Annuler</button>
+        <button class="action-btn primary" onclick="confirmCreateFolder()">Créer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- App -->
+  <div class="app" id="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">Nath<b>Notes</b></div>
+        <button class="theme-btn" onclick="toggleTheme()">
+          <span id="themeIcon">☀️</span>
+        </button>
+      </div>
+
+      <div class="user-info">
+        <div class="avatar" id="avatar">N</div>
+        <div>
+          <div class="user-name" id="userName">User</div>
+          <div class="user-email" id="userEmail">email</div>
+        </div>
+      </div>
+
+      <div class="sidebar-actions">
+        <button class="action-btn primary" onclick="createNote()">
+          <span>+</span> Nouvelle note
+        </button>
+        <button class="action-btn" onclick="showAllNotes()">
+          <span>📋</span> Toutes les notes
+        </button>
+        <button class="action-btn" onclick="showFavorites()">
+          <span>⭐</span> Favoris
+        </button>
+        <button class="action-btn" onclick="showTrash()">
+          <span>🗑️</span> Corbeille
+        </button>
+        <button class="action-btn logout" onclick="logout()">
+          <span>🚪</span> Déconnexion
+        </button>
+        <a href="help.html" class="action-btn" style="text-decoration:none">
+          <span>📖</span> Aide / API
+        </a>
+      </div>
+
+      <div class="folders-section">
+        <div class="folders-title">Dossiers</div>
+        <div class="folder-list" id="folderList">
+          <!-- Folders loaded from API -->
+        </div>
+        <button class="action-btn" onclick="createFolder()" style="margin-top:8px">
+          <span>+</span> Nouveau dossier
+        </button>
+      </div>
+    </aside>
+
+    <!-- Notes List -->
+    <section class="notes-list">
+      <div class="notes-header">
+        <div class="search-box">
+          <span>🔍</span>
+          <input type="text" placeholder="Rechercher..." id="searchInput" oninput="searchNotes()">
+        </div>
+      </div>
+      <div class="notes-items" id="notesItems"></div>
+    </section>
+
+    <!-- Editor -->
+    <main class="editor" id="editor">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">📝</div>
+        <div class="empty-title">Sélectionnez une note</div>
+        <div class="empty-desc">Choisissez une note dans la liste ou créez-en une nouvelle</div>
+      </div>
+
+      <div class="editor-content-wrapper" id="editorContent" style="display:none;flex-direction:column;height:100%">
+        <div class="editor-header">
+          <input type="text" class="editor-title" id="noteTitle" placeholder="Titre de la note" oninput="saveNote()">
+          <div class="editor-meta">
+            <span id="noteDate">Modifié aujourd'hui</span>
+            <span id="saveIndicator" style="color: var(--gold);"></span>
+            <div class="editor-actions">
+              <button class="icon-btn" onclick="toggleFavorite()" title="Favoris">⭐</button>
+              <button class="icon-btn" onclick="deleteNote()" title="Supprimer">🗑️</button>
+            </div>
+          </div>
+        </div>
+        <div class="editor-body">
+          <div class="editor-content" id="noteContent" contenteditable="true" oninput="saveNote()"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:3001/api';
+    
+    // State
+    let token = localStorage.getItem('nathnotes_token');
+    let user = JSON.parse(localStorage.getItem('nathnotes_user') || 'null');
+    let notes = [];
+    let folders = [];
+    let currentNote = null;
+    let currentFolder = 'all';
+    let isRegisterMode = false;
+    let saveTimeout = null;
+
+    // Init
+    async function init() {
+      if (token && user) {
+        showApp();
+      }
+    }
+
+    // Auth
+    function toggleMode() {
+      isRegisterMode = !isRegisterMode;
+      document.getElementById('name').style.display = isRegisterMode ? 'block' : 'none';
+      document.getElementById('login-btn').textContent = isRegisterMode ? 'S\'inscrire' : 'Se connecter';
+      document.getElementById('toggle-text').textContent = isRegisterMode ? 'Déjà un compte ?' : 'Pas encore de compte ?';
+      document.getElementById('toggle-link').textContent = isRegisterMode ? 'Se connecter' : 'S\'inscrire';
+      document.getElementById('login-error').style.display = 'none';
+    }
+
+    async function handleLogin() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const name = document.getElementById('name').value;
+      const errorEl = document.getElementById('login-error');
+      
+      const endpoint = isRegisterMode ? '/auth/register' : '/auth/login';
+      const body = isRegisterMode ? { email, password, name } : { email, password };
+      
+      try {
+        const res = await fetch(API_URL + endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+          credentials: 'include'
+        });
+        
+        const data = await res.json();
+        
+        if (!res.ok) {
+          errorEl.textContent = data.error || 'Erreur';
+          errorEl.style.display = 'block';
+          return;
+        }
+        
+        token = data.token;
+        user = data.user;
+        localStorage.setItem('nathnotes_token', token);
+        localStorage.setItem('nathnotes_user', JSON.stringify(user));
+        
+        showApp();
+      } catch (err) {
+        errorEl.textContent = 'Erreur de connexion';
+        errorEl.style.display = 'block';
+      }
+    }
+
+    function logout() {
+      token = null;
+      user = null;
+      localStorage.removeItem('nathnotes_token');
+      localStorage.removeItem('nathnotes_user');
+      // Call logout endpoint to clear cookie
+      fetch(API_URL + '/auth/logout', {
+        method: 'POST',
+        credentials: 'include'
+      }).finally(() => {
+        document.getElementById('login-screen').classList.remove('hidden');
+        document.getElementById('app').classList.remove('visible');
+      });
+    }
+
+    function showApp() {
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('app').classList.add('visible');
+      document.getElementById('userName').textContent = user.name;
+      document.getElementById('userEmail').textContent = user.email;
+      document.getElementById('avatar').textContent = user.name.charAt(0).toUpperCase();
+      loadFolders();
+      loadNotes();
+    }
+
+    // API
+    async function apiCall(endpoint, options = {}) {
+      const res = await fetch(API_URL + endpoint, {
+        ...options,
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...options.headers
+        }
+      });
+      
+      if (res.status === 401) {
+        logout();
+        return null;
+      }
+      
+      return res.json();
+    }
+
+    // Folders
+    async function loadFolders() {
+      folders = (await apiCall('/folders')) || [];
+      renderFolders();
+    }
+
+    function renderFolders() {
+      const container = document.querySelector('.folder-list');
+      container.innerHTML = folders.map(folder => `
+        <div class="folder-item ${currentFolder === folder.id ? 'active' : ''}" onclick="selectFolder('${folder.id}')" data-id="${folder.id}">
+          <span class="folder-icon">${folder.icon}</span>
+          <span class="folder-name">${folder.name}</span>
+          <span class="folder-count" data-folder="${folder.id}">${folder.id === 'all' ? notes.length : notes.filter(n => n.folder === folder.id).length}</span>
+        </div>
+      `).join('');
+    }
+
+    // Notes
+    async function loadNotes() {
+      notes = (await apiCall('/notes')) || [];
+      renderNotesList();
+      renderFolders(); // Update folder counts
+    }
+
+    function renderNotesList() {
+      const container = document.getElementById('notesItems');
+      let filtered = notes;
+
+      if (currentFolder !== 'all') {
+        filtered = filtered.filter(n => n.folder === currentFolder);
+      }
+
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      if (search) {
+        filtered = filtered.filter(n => 
+          (n.title || '').toLowerCase().includes(search) || 
+          (n.content || '').toLowerCase().includes(search)
+        );
+      }
+
+      container.innerHTML = filtered.map(note => `
+        <div class="note-item ${currentNote?.id === note.id ? 'active' : ''}" onclick="openNote(${note.id})">
+          <div class="note-title">${note.title || 'Sans titre'}</div>
+          <div class="note-preview">${(note.content || '').replace(/<[^>]*>/g, '').substring(0, 80)}</div>
+          <div class="note-date">${formatDate(note.updated_at)}</div>
+        </div>
+      `).join('');
+    }
+
+    function openNote(id) {
+      currentNote = notes.find(n => n.id === id);
+      document.getElementById('emptyState').style.display = 'none';
+      const editor = document.getElementById('editorContent');
+      editor.style.display = 'flex';
+      document.getElementById('noteTitle').value = currentNote.title || '';
+      document.getElementById('noteContent').innerHTML = currentNote.content || '';
+      document.getElementById('noteDate').textContent = 'Modifié ' + formatDate(currentNote.updated_at);
+      renderNotesList();
+    }
+
+    async function createNote() {
+      const note = await apiCall('/notes', {
+        method: 'POST',
+        body: JSON.stringify({ title: '', content: '', folder: currentFolder === 'all' ? 'all' : currentFolder })
+      });
+      notes.unshift(note);
+      renderNotesList();
+      openNote(note.id);
+      document.getElementById('noteTitle').focus();
+    }
+
+    async function saveNote() {
+      if (!currentNote) return;
+      
+      if (saveTimeout) clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(async () => {
+        const title = document.getElementById('noteTitle').value;
+        // Sanitize HTML content before saving
+        const content = DOMPurify.sanitize(document.getElementById('noteContent').innerHTML);
+        
+        await apiCall(`/notes/${currentNote.id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ title, content })
+        });
+        
+        currentNote.title = title;
+        currentNote.content = content;
+        
+        // Update preview without re-rendering entire list
+        const activeItem = document.querySelector('.note-item.active .note-title');
+        if (activeItem) activeItem.textContent = title || 'Sans titre';
+        
+        // Show saved indicator
+        const saveIndicator = document.getElementById('saveIndicator');
+        if (saveIndicator) {
+          saveIndicator.textContent = 'Enregistré ✓';
+          setTimeout(() => {
+            saveIndicator.textContent = '';
+          }, 2000);
+        }
+      }, 500);
+    }
+
+    async function deleteNote() {
+      if (!currentNote) return;
+      if (!confirm('Supprimer cette note ?')) return;
+      
+      await apiCall(`/notes/${currentNote.id}`, { method: 'DELETE' });
+      notes = notes.filter(n => n.id !== currentNote.id);
+      currentNote = null;
+      document.getElementById('emptyState').style.display = 'flex';
+      document.getElementById('editorContent').style.display = 'none';
+      renderNotesList();
+    }
+
+    async function toggleFavorite() {
+      if (!currentNote) return;
+      const newFav = currentNote.favorite ? 0 : 1;
+      await apiCall(`/notes/${currentNote.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ favorite: newFav })
+      });
+      currentNote.favorite = newFav;
+    }
+
+    function searchNotes() {
+      renderNotesList();
+    }
+
+    // Folders
+    function selectFolder(folder) {
+      currentFolder = folder;
+      document.querySelectorAll('.folder-item').forEach(el => el.classList.remove('active'));
+      event.target.closest('.folder-item').classList.add('active');
+      renderNotesList();
+    }
+
+    function showAllNotes() {
+      currentFolder = 'all';
+      document.querySelectorAll('.folder-item').forEach(el => el.classList.remove('active'));
+      document.querySelector('.folder-item:first-child').classList.add('active');
+      loadNotes();
+    }
+
+    async function showFavorites() {
+      const favs = notes.filter(n => n.favorite);
+      const container = document.getElementById('notesItems');
+      container.innerHTML = favs.map(note => `
+        <div class="note-item ${currentNote?.id === note.id ? 'active' : ''}" onclick="openNote(${note.id})">
+          <div class="note-title">⭐ ${note.title || 'Sans titre'}</div>
+          <div class="note-preview">${(note.content || '').replace(/<[^>]*>/g, '').substring(0, 80)}</div>
+        </div>
+      `).join('');
+    }
+
+    async function showTrash() {
+      const deleted = (await apiCall('/notes/deleted')) || [];
+      const container = document.getElementById('notesItems');
+      container.innerHTML = deleted.map(note => `
+        <div class="note-item" onclick="restoreNote(${note.id})">
+          <div class="note-title">🗑️ ${note.title || 'Sans titre'}</div>
+          <div class="note-preview">Cliquer pour restaurer</div>
+        </div>
+      `).join('');
+    }
+
+    async function restoreNote(id) {
+      await apiCall(`/notes/${id}/restore`, { method: 'POST' });
+      loadNotes();
+    }
+
+    async function createFolder() {
+      document.getElementById('folderModal').style.display = 'flex';
+      document.getElementById('folderNameInput').value = '';
+      document.getElementById('folderNameInput').focus();
+    }
+    
+    function closeFolderModal() {
+      document.getElementById('folderModal').style.display = 'none';
+    }
+    
+    async function confirmCreateFolder() {
+      const name = document.getElementById('folderNameInput').value.trim();
+      if (!name) return;
+      
+      const folder = await apiCall('/folders', {
+        method: 'POST',
+        body: JSON.stringify({ name })
+      });
+      
+      folders.push(folder);
+      renderFolders();
+      closeFolderModal();
+    }
+
+    // Theme
+    function toggleTheme() {
+      document.body.classList.toggle('light');
+      document.getElementById('themeIcon').textContent = document.body.classList.contains('light') ? '🌙' : '☀️';
+    }
+
+    // Utils
+    function formatDate(dateStr) {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('fr', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    }
+
+    // Start
+    init();
+  </script>
+</body>
+</html>
