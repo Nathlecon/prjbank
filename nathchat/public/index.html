@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NathChat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg0: #0a0a0f;
+      --bg1: #0f0f18;
+      --bg2: #141420;
+      --bg3: #1a1a2e;
+      --bg4: #1f1f3a;
+      --border: rgba(255,255,255,0.07);
+      --border-bright: rgba(255,255,255,0.12);
+      --accent: #7c6aff;
+      --accent2: #a78bfa;
+      --accent-glow: rgba(124,106,255,0.15);
+      --green: #34d399;
+      --red: #f87171;
+      --amber: #fbbf24;
+      --text-primary: #e8e8f0;
+      --text-secondary: #8888aa;
+      --text-muted: #55556a;
+      --font-display: 'Syne', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --radius: 12px;
+      --radius-sm: 6px;
+    }
+
+    html, body { height: 100%; overflow: hidden; }
+
+    body {
+      font-family: var(--font-display);
+      background: var(--bg0);
+      color: var(--text-primary);
+      display: flex;
+      height: 100vh;
+    }
+
+    /* ── LOGIN SCREEN ─────────────────────────────────────────────────── */
+    #login-screen {
+      position: fixed; inset: 0; z-index: 100;
+      background: var(--bg0);
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    #login-screen.hidden { display: none; }
+
+    .login-card {
+      background: var(--bg2);
+      border: 1px solid var(--border-bright);
+      border-radius: 20px;
+      padding: 48px 40px;
+      width: 380px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-card::before {
+      content: '';
+      position: absolute;
+      top: -80px; left: -80px;
+      width: 240px; height: 240px;
+      background: var(--accent-glow);
+      border-radius: 50%;
+      filter: blur(60px);
+      pointer-events: none;
+    }
+
+    .login-logo {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      color: var(--accent2);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .login-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+      line-height: 1.2;
+    }
+
+    .login-sub {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 32px;
+    }
+
+    .login-sub span {
+      color: var(--accent2);
+      font-weight: 500;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .field input {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .field input:focus {
+      border-color: var(--accent);
+    }
+
+    #login-error {
+      font-size: 12px;
+      color: var(--red);
+      margin-bottom: 14px;
+      min-height: 16px;
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      letter-spacing: 0.04em;
+    }
+
+    .btn-login:hover { opacity: 0.88; }
+    .btn-login:active { transform: scale(0.98); }
+    .btn-login:disabled { opacity: 0.4; cursor: default; }
+
+    .login-footer {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .login-footer a {
+      color: var(--accent2);
+      text-decoration: none;
+    }
+
+    /* ── APP LAYOUT ───────────────────────────────────────────────────── */
+    #app { display: flex; width: 100%; height: 100vh; }
+    #app.hidden { display: none; }
+
+    /* ── SIDEBAR ──────────────────────────────────────────────────────── */
+    #sidebar {
+      width: 240px;
+      min-width: 240px;
+      background: var(--bg1);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-header {
+      padding: 20px 16px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-brand {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .brand-dot {
+      width: 8px; height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent);
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 10px;
+    }
+
+    .avatar {
+      width: 26px; height: 26px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .user-info { flex: 1; min-width: 0; }
+    .user-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-status {
+      font-size: 10px;
+      color: var(--green);
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .status-dot {
+      width: 5px; height: 5px;
+      background: var(--green);
+      border-radius: 50%;
+    }
+
+    .btn-logout {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 2px;
+      transition: color 0.2s;
+    }
+    .btn-logout:hover { color: var(--red); }
+
+    /* Salons */
+    .sidebar-section {
+      padding: 14px 12px 8px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 0 6px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .btn-add-room {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      transition: color 0.2s;
+    }
+    .btn-add-room:hover { color: var(--accent2); }
+
+    .room-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+      position: relative;
+    }
+
+    .room-item:hover { background: var(--bg3); color: var(--text-primary); }
+
+    .room-item.active {
+      background: var(--accent-glow);
+      color: var(--accent2);
+      border: 1px solid rgba(124,106,255,0.2);
+    }
+
+    .room-hash {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: inherit;
+      opacity: 0.6;
+    }
+
+    /* Online users */
+    .sidebar-online {
+      padding: 8px 12px 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .online-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 8px;
+      max-height: 160px;
+      overflow-y: auto;
+    }
+
+    .online-user {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 3px 6px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .online-avatar {
+      width: 20px; height: 20px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 50%;
+      font-size: 9px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* ── MAIN CHAT ────────────────────────────────────────────────────── */
+    #chat-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      padding: 0 20px;
+      height: 56px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg1);
+      flex-shrink: 0;
+    }
+
+    .chat-room-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chat-room-name .room-hash { font-size: 16px; }
+
+    .chat-header-sep { flex: 1; }
+
+    .online-badge {
+      font-size: 11px;
+      color: var(--green);
+      background: rgba(52,211,153,0.1);
+      border: 1px solid rgba(52,211,153,0.2);
+      border-radius: 20px;
+      padding: 3px 10px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-weight: 500;
+    }
+
+    /* Messages zone */
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    #messages::-webkit-scrollbar { width: 4px; }
+    #messages::-webkit-scrollbar-track { background: transparent; }
+    #messages::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
+
+    .msg-group {
+      display: flex;
+      gap: 10px;
+      padding: 4px 6px;
+      border-radius: 8px;
+      transition: background 0.1s;
+      position: relative;
+    }
+
+    .msg-group:hover { background: var(--bg2); }
+
+    .msg-group:hover .msg-actions { opacity: 1; }
+
+    .msg-avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 2px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+    }
+
+    .msg-body { flex: 1; min-width: 0; }
+
+    .msg-meta {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 2px;
+    }
+
+    .msg-author {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent2);
+    }
+
+    .msg-author.self { color: var(--green); }
+
+    .msg-time {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .msg-text {
+      font-size: 14px;
+      color: var(--text-primary);
+      line-height: 1.55;
+      word-break: break-word;
+    }
+
+    .msg-reactions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .reaction-pill {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2px 8px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      color: var(--text-secondary);
+    }
+
+    .reaction-pill:hover {
+      background: var(--accent-glow);
+      border-color: rgba(124,106,255,0.3);
+      color: var(--accent2);
+    }
+
+    .reaction-pill .r-count { font-family: var(--font-mono); font-size: 11px; }
+
+    /* Actions hover */
+    .msg-actions {
+      position: absolute;
+      right: 8px;
+      top: 4px;
+      opacity: 0;
+      display: flex;
+      gap: 2px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2px 4px;
+      transition: opacity 0.15s;
+    }
+
+    .action-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 3px 5px;
+      border-radius: 5px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      transition: background 0.1s, color 0.1s;
+    }
+
+    .action-btn:hover { background: var(--bg4); color: var(--text-primary); }
+
+    /* Emoji picker */
+    .emoji-picker {
+      position: absolute;
+      right: 8px;
+      top: 32px;
+      background: var(--bg3);
+      border: 1px solid var(--border-bright);
+      border-radius: 10px;
+      padding: 8px;
+      display: flex;
+      gap: 4px;
+      z-index: 10;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    .emoji-picker button {
+      background: none;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 6px;
+      transition: background 0.1s;
+    }
+
+    .emoji-picker button:hover { background: var(--bg4); }
+
+    /* System message */
+    .msg-system {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 6px;
+      font-style: italic;
+    }
+
+    /* Typing indicator */
+    #typing-indicator {
+      height: 20px;
+      padding: 0 26px;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* Input zone */
+    .chat-input-zone {
+      padding: 12px 20px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--bg1);
+      flex-shrink: 0;
+    }
+
+    .input-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg3);
+      border: 1px solid var(--border-bright);
+      border-radius: var(--radius);
+      padding: 8px 12px;
+      transition: border-color 0.2s;
+    }
+
+    .input-bar:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    #msg-input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      font-family: var(--font-display);
+      font-size: 14px;
+      color: var(--text-primary);
+      resize: none;
+      max-height: 120px;
+      line-height: 1.5;
+    }
+
+    #msg-input::placeholder { color: var(--text-muted); }
+
+    .btn-send {
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      width: 32px; height: 32px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .btn-send:hover { opacity: 0.85; }
+    .btn-send:active { transform: scale(0.92); }
+
+    .btn-send svg { width: 14px; height: 14px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* Modal ajout salon */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.hidden { display: none; }
+
+    .modal-box {
+      background: var(--bg2);
+      border: 1px solid var(--border-bright);
+      border-radius: var(--radius);
+      padding: 24px;
+      width: 320px;
+    }
+
+    .modal-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 14px;
+    }
+
+    .modal-input {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 9px 12px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text-primary);
+      outline: none;
+      margin-bottom: 14px;
+    }
+
+    .modal-input:focus { border-color: var(--accent); }
+
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+    .btn-cancel {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 14px;
+      font-family: var(--font-display);
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .btn-confirm {
+      background: var(--accent);
+      border: none;
+      border-radius: 6px;
+      padding: 7px 14px;
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    /* ── WELCOME ──────────────────────────────────────────────────────── */
+    #welcome-screen {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+      color: var(--text-muted);
+    }
+
+    .welcome-icon {
+      font-size: 48px;
+      opacity: 0.3;
+    }
+
+    .welcome-text {
+      font-size: 14px;
+    }
+
+    /* Scrollbar sidebar */
+    .sidebar-section::-webkit-scrollbar { width: 3px; }
+    .sidebar-section::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<!-- ── LOGIN ─────────────────────────────────────────────────────────────── -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">KernelAndCo</div>
+    <div class="login-title">NathChat</div>
+    <div class="login-sub">Connecte-toi avec ton compte <span>NathBank</span></div>
+    <div class="field">
+      <label>Nom d'utilisateur</label>
+      <input type="text" id="login-user" placeholder="ton_pseudo" autocomplete="username"/>
+    </div>
+    <div class="field">
+      <label>Mot de passe</label>
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"/>
+    </div>
+    <div id="login-error"></div>
+    <button class="btn-login" id="btn-login" onclick="doLogin()">Se connecter</button>
+    <div class="login-footer">
+      Pas de compte ? <a href="http://localhost:3000" target="_blank">Créer un compte NathBank →</a>
+    </div>
+  </div>
+</div>
+
+<!-- ── APP ───────────────────────────────────────────────────────────────── -->
+<div id="app" class="hidden">
+
+  <!-- Sidebar -->
+  <div id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <div class="brand-dot"></div>
+        NathChat
+      </div>
+      <div class="user-pill">
+        <div class="avatar" id="user-avatar">?</div>
+        <div class="user-info">
+          <div class="user-name" id="user-display-name">—</div>
+          <div class="user-status"><div class="status-dot"></div> En ligne</div>
+        </div>
+        <button class="btn-logout" onclick="doLogout()" title="Déconnexion">✕</button>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="section-label">
+        Salons
+        <button class="btn-add-room" onclick="showAddRoom()" title="Nouveau salon">＋</button>
+      </div>
+      <div id="room-list"></div>
+    </div>
+
+    <div class="sidebar-online">
+      <div class="section-label">En ligne <span id="online-count">0</span></div>
+      <div class="online-list" id="online-list"></div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div id="chat-main">
+    <div id="welcome-screen">
+      <div class="welcome-icon">💬</div>
+      <div class="welcome-text">Sélectionne un salon pour commencer</div>
+    </div>
+
+    <div id="chat-view" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
+      <div class="chat-header">
+        <div class="chat-room-name">
+          <span class="room-hash">#</span>
+          <span id="chat-room-title">général</span>
+        </div>
+        <div class="chat-header-sep"></div>
+        <div class="online-badge">
+          <div class="status-dot"></div>
+          <span id="online-badge-count">0</span> en ligne
+        </div>
+      </div>
+
+      <div id="messages"></div>
+      <div id="typing-indicator"></div>
+
+      <div class="chat-input-zone">
+        <div class="input-bar">
+          <textarea id="msg-input" rows="1" placeholder="Envoyer un message..."></textarea>
+          <button class="btn-send" onclick="sendMessage()">
+            <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal nouveau salon -->
+<div class="modal-overlay hidden" id="modal-room">
+  <div class="modal-box">
+    <div class="modal-title">Nouveau salon</div>
+    <input type="text" class="modal-input" id="new-room-name" placeholder="nom-du-salon"/>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="hideAddRoom()">Annuler</button>
+      <button class="btn-confirm" onclick="createRoom()">Créer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── CONFIG ───────────────────────────────────────────────────────────────
+  const API = 'http://localhost:3002';
+  const WS_URL = 'ws://localhost:3002';
+  const EMOJIS = ['👍','❤️','😂','😮','😢','🔥'];
+
+  // ── STATE ────────────────────────────────────────────────────────────────
+  let ws = null;
+  let token = localStorage.getItem('nathchat_token');
+  let currentUser = JSON.parse(localStorage.getItem('nathchat_user') || 'null');
+  let currentRoomId = null;
+  let typingTimeout = null;
+
+  // ── INIT ─────────────────────────────────────────────────────────────────
+  if (token && currentUser) {
+    showApp();
+    connectWS();
+  }
+
+  // ── LOGIN ─────────────────────────────────────────────────────────────────
+  async function doLogin() {
+    const username = document.getElementById('login-user').value.trim();
+    const password = document.getElementById('login-pass').value;
+    const btn = document.getElementById('btn-login');
+    const err = document.getElementById('login-error');
+
+    if (!username || !password) { err.textContent = 'Remplis tous les champs'; return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Connexion...';
+    err.textContent = '';
+
+    try {
+      const res = await fetch('http://localhost:3000/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        err.textContent = data.error || 'Identifiants incorrects';
+        btn.disabled = false;
+        btn.textContent = 'Se connecter';
+        return;
+      }
+
+      token = data.token;
+      currentUser = { userId: data.userId || data.id, username: data.username || username };
+      localStorage.setItem('nathchat_token', token);
+      localStorage.setItem('nathchat_user', JSON.stringify(currentUser));
+
+      showApp();
+      connectWS();
+    } catch (e) {
+      err.textContent = 'Impossible de contacter NathBank (port 3000)';
+      btn.disabled = false;
+      btn.textContent = 'Se connecter';
+    }
+  }
+
+  function doLogout() {
+    localStorage.removeItem('nathchat_token');
+    localStorage.removeItem('nathchat_user');
+    token = null; currentUser = null;
+    if (ws) ws.close();
+    document.getElementById('app').classList.add('hidden');
+    document.getElementById('login-screen').classList.remove('hidden');
+    document.getElementById('login-pass').value = '';
+  }
+
+  function showApp() {
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+    document.getElementById('user-display-name').textContent = currentUser.username;
+    document.getElementById('user-avatar').textContent = currentUser.username[0].toUpperCase();
+  }
+
+  // ── WEBSOCKET ─────────────────────────────────────────────────────────────
+  function connectWS() {
+    ws = new WebSocket(WS_URL);
+
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ type: 'auth', token }));
+    };
+
+    ws.onmessage = (e) => {
+      const data = JSON.parse(e.data);
+      handleWS(data);
+    };
+
+    ws.onclose = () => {
+      setTimeout(connectWS, 3000);
+    };
+  }
+
+  function handleWS(data) {
+    switch (data.type) {
+      case 'auth_ok':
+        break;
+
+      case 'rooms':
+        renderRooms(data.rooms);
+        break;
+
+      case 'online_users':
+        renderOnlineUsers(data.users);
+        break;
+
+      case 'room_history':
+        if (data.roomId === currentRoomId) renderHistory(data.messages);
+        break;
+
+      case 'new_message':
+        if (data.message.room_id === currentRoomId) appendMessage(data.message);
+        break;
+
+      case 'reaction_update':
+        updateReactions(data.messageId, data.reactions);
+        break;
+
+      case 'user_typing':
+        if (data.roomId === currentRoomId && data.username !== currentUser.username) {
+          showTyping(data.username);
+        }
+        break;
+
+      case 'system':
+        if (data.roomId === currentRoomId) appendSystem(data.message);
+        break;
+
+      case 'error':
+        console.error('WS error:', data.message);
+        break;
+    }
+  }
+
+  function wsSend(obj) {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(obj));
+    }
+  }
+
+  // ── ROOMS ─────────────────────────────────────────────────────────────────
+  function renderRooms(rooms) {
+    const list = document.getElementById('room-list');
+    list.innerHTML = '';
+    rooms.forEach(r => {
+      const el = document.createElement('div');
+      el.className = 'room-item' + (r.id === currentRoomId ? ' active' : '');
+      el.dataset.id = r.id;
+      el.innerHTML = `<span class="room-hash">#</span>${r.name}`;
+      el.onclick = () => joinRoom(r.id, r.name);
+      list.appendChild(el);
+    });
+  }
+
+  function joinRoom(roomId, roomName) {
+    currentRoomId = roomId;
+    document.getElementById('chat-room-title').textContent = roomName;
+    document.getElementById('welcome-screen').style.display = 'none';
+    document.getElementById('chat-view').style.display = 'flex';
+    document.getElementById('messages').innerHTML = '';
+    document.querySelectorAll('.room-item').forEach(el => {
+      el.classList.toggle('active', parseInt(el.dataset.id) === roomId);
+    });
+    wsSend({ type: 'join_room', payload: { roomId } });
+  }
+
+  function showAddRoom() {
+    document.getElementById('modal-room').classList.remove('hidden');
+    document.getElementById('new-room-name').focus();
+  }
+
+  function hideAddRoom() {
+    document.getElementById('modal-room').classList.add('hidden');
+    document.getElementById('new-room-name').value = '';
+  }
+
+  async function createRoom() {
+    const name = document.getElementById('new-room-name').value.trim().toLowerCase().replace(/\s+/g, '-');
+    if (!name) return;
+    await fetch(`${API}/api/rooms`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ name })
+    });
+    hideAddRoom();
+  }
+
+  // ── MESSAGES ──────────────────────────────────────────────────────────────
+  function renderHistory(messages) {
+    const container = document.getElementById('messages');
+    container.innerHTML = '';
+    messages.forEach(m => appendMessage(m, false));
+    scrollBottom();
+  }
+
+  function appendMessage(msg, scroll = true) {
+    const container = document.getElementById('messages');
+    const isSelf = msg.user_id == currentUser.userId || msg.username === currentUser.username;
+    const time = new Date(msg.created_at).toLocaleTimeString('fr', { hour: '2-digit', minute: '2-digit' });
+
+    const group = document.createElement('div');
+    group.className = 'msg-group';
+    group.dataset.msgId = msg.id;
+
+    group.innerHTML = `
+      <div class="msg-avatar">${msg.username[0].toUpperCase()}</div>
+      <div class="msg-body">
+        <div class="msg-meta">
+          <span class="msg-author${isSelf ? ' self' : ''}">${msg.username}</span>
+          <span class="msg-time">${time}</span>
+        </div>
+        <div class="msg-text">${escapeHtml(msg.content)}</div>
+        <div class="msg-reactions" id="reactions-${msg.id}">
+          ${renderReactionPills(msg.id, msg.reactions || [])}
+        </div>
+      </div>
+      <div class="msg-actions">
+        <button class="action-btn" onclick="toggleEmojiPicker(event, ${msg.id})" title="Réagir">😊</button>
+      </div>
+    `;
+
+    container.appendChild(group);
+    if (scroll) scrollBottom();
+  }
+
+  function appendSystem(text) {
+    const container = document.getElementById('messages');
+    const el = document.createElement('div');
+    el.className = 'msg-system';
+    el.textContent = text;
+    container.appendChild(el);
+    scrollBottom();
+  }
+
+  function renderReactionPills(msgId, reactions) {
+    return reactions.map(r =>
+      `<span class="reaction-pill" onclick="sendReaction(${msgId}, '${r.emoji}')">
+        ${r.emoji} <span class="r-count">${r.count}</span>
+      </span>`
+    ).join('');
+  }
+
+  function updateReactions(msgId, reactions) {
+    const el = document.getElementById(`reactions-${msgId}`);
+    if (el) el.innerHTML = renderReactionPills(msgId, reactions);
+  }
+
+  function scrollBottom() {
+    const c = document.getElementById('messages');
+    c.scrollTop = c.scrollHeight;
+  }
+
+  // ── SEND ──────────────────────────────────────────────────────────────────
+  function sendMessage() {
+    const input = document.getElementById('msg-input');
+    const content = input.value.trim();
+    if (!content || !currentRoomId) return;
+    wsSend({ type: 'send_message', payload: { roomId: currentRoomId, content } });
+    input.value = '';
+    input.style.height = 'auto';
+  }
+
+  document.getElementById('msg-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  document.getElementById('msg-input').addEventListener('input', function () {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    if (!currentRoomId) return;
+    wsSend({ type: 'typing', payload: { roomId: currentRoomId } });
+  });
+
+  document.getElementById('login-pass').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') doLogin();
+  });
+
+  // ── REACTIONS ─────────────────────────────────────────────────────────────
+  let openPickerId = null;
+  let openPickerEl = null;
+
+  function toggleEmojiPicker(e, msgId) {
+    e.stopPropagation();
+    if (openPickerEl) { openPickerEl.remove(); openPickerEl = null; }
+    if (openPickerId === msgId) { openPickerId = null; return; }
+    openPickerId = msgId;
+
+    const picker = document.createElement('div');
+    picker.className = 'emoji-picker';
+    picker.innerHTML = EMOJIS.map(em =>
+      `<button onclick="sendReaction(${msgId},'${em}')">${em}</button>`
+    ).join('');
+
+    const btn = e.currentTarget;
+    btn.closest('.msg-group').appendChild(picker);
+    openPickerEl = picker;
+  }
+
+  document.addEventListener('click', () => {
+    if (openPickerEl) { openPickerEl.remove(); openPickerEl = null; openPickerId = null; }
+  });
+
+  function sendReaction(msgId, emoji) {
+    if (!currentRoomId) return;
+    wsSend({ type: 'react', payload: { messageId: msgId, emoji, roomId: currentRoomId } });
+    if (openPickerEl) { openPickerEl.remove(); openPickerEl = null; openPickerId = null; }
+  }
+
+  // ── TYPING ────────────────────────────────────────────────────────────────
+  function showTyping(username) {
+    const el = document.getElementById('typing-indicator');
+    el.textContent = `${username} est en train d'écrire...`;
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => { el.textContent = ''; }, 2500);
+  }
+
+  // ── ONLINE USERS ──────────────────────────────────────────────────────────
+  function renderOnlineUsers(users) {
+    document.getElementById('online-count').textContent = users.length;
+    document.getElementById('online-badge-count').textContent = users.length;
+    const list = document.getElementById('online-list');
+    list.innerHTML = users.map(u => `
+      <div class="online-user">
+        <div class="online-avatar">${u.username[0].toUpperCase()}</div>
+        ${u.username}
+      </div>
+    `).join('');
+  }
+
+  // ── UTILS ─────────────────────────────────────────────────────────────────
+  function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+              .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  // Fermer modal sur Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') hideAddRoom();
+  });
+</script>
+</body>
+</html>
